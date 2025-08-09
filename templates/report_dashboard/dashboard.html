@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(to right, #c9d6ff, #e2e2e2);
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .glass-container {
+        max-width: 1100px;
+        margin: 60px auto;
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+    }
+
+    .status-logs {
+        display: flex;
+        gap: 20px;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .log-box {
+        flex: 1;
+        min-width: 300px;
+        background-color: #1e1e1e;
+        color: #00ff00;
+        padding: 15px;
+        border-radius: 10px;
+        font-family: 'Courier New', Courier, monospace;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        white-space: pre-wrap;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead th {
+        background-color: #6c63ff;
+        color: white;
+        padding: 14px;
+        font-size: 15px;
+        text-transform: uppercase;
+        border-radius: 8px 8px 0 0;
+    }
+
+    tbody tr {
+        background-color: rgba(255, 255, 255, 0.7);
+        transition: background-color 0.2s;
+    }
+
+    tbody tr:hover {
+        background-color: #f3f3f3;
+    }
+
+    td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .badge-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .project-name {
+        font-weight: bold;
+        text-transform: capitalize;
+        color: #333;
+    }
+</style>
+
+<div class="glass-container">
+    <h1>📘 Report Automation Dashboard</h1>
+
+    <div class="status-logs">
+        <div class="log-box">
+            <pre>{{ log_content.NRLDC }}</pre>
+        </div>
+        <div class="log-box">
+            <pre>{{ log_content.SRLDC }}</pre>
+        </div>
+        <div class="log-box">
+            <pre>{{ log_content.WRLDC }}</pre>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Project</th>
+                <th>Latest Report Date (2A)</th>
+                <th>Records (2A)</th>
+                <th>Latest Report Date (2C)</th>
+                <th>Records (2C)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in status %}
+            <tr>
+                <td class="project-name">{{ project.name }}</td>
+                <td>
+                    {% if project.latest_2A_date %}
+                    <span class="badge badge-success">{{ project.latest_2A_date|date:"Y-m-d" }}</span>
+                    {% else %}
+                    <span class="badge badge-danger">No Data</span>
+                    {% endif %}
+                </td>
+                <td>{{ project.count_2A }}</td>
+                <td>
+                    {% if project.latest_2C_date %}
+                    <span class="badge badge-success">{{ project.latest_2C_date|date:"Y-m-d" }}</span>
+                    {% else %}
+                    <span class="badge badge-danger">No Data</span>
+                    {% endif %}
+                </td>
+                <td>{{ project.count_2C }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
