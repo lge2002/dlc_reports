@@ -199,7 +199,7 @@ class Command(BaseCommand):
             self.stdout.write(f"States found for Table 2A after filtering: {sub_2A_final['state'].tolist()}")
 
 
-            combined_json_data['table_2A'] = sub_2A_final.to_dict(orient='records')
+            combined_json_data['wrldc_table_2A'] = sub_2A_final.to_dict(orient='records')
             self.stdout.write(self.style.SUCCESS(f"✅ Table 2(A) extracted for combined JSON."))
 
 
@@ -306,7 +306,7 @@ class Command(BaseCommand):
             self.stdout.write(f"States found for Table 2C after filtering: {sub_2C_final['state'].tolist()}")
 
 
-            combined_json_data['table_2C'] = sub_2C_final.to_dict(orient='records')
+            combined_json_data['wrldc_table_2C'] = sub_2C_final.to_dict(orient='records')
             self.stdout.write(self.style.SUCCESS(f"✅ Table 2(C) extracted for combined JSON."))
 
 
@@ -333,7 +333,8 @@ class Command(BaseCommand):
 
 
         if combined_json_data:
-            combined_json_path = os.path.join(output_dir, 'new_project_tables.json')
+            combined_json_path = os.path.join(output_dir, 'wrldc_report_tables.json')
+            
             with open(combined_json_path, 'w', encoding='utf-8') as f:
                 json.dump(combined_json_data, f, indent=4, ensure_ascii=False)
             self.stdout.write(self.style.SUCCESS(f"✅ Combined tables saved to: {combined_json_path}"))

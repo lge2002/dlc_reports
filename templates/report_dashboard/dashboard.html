@@ -9,6 +9,7 @@
         padding: 0;
     }
 
+
     .glass-container {
         max-width: 1100px;
         margin: 60px auto;
@@ -21,11 +22,13 @@
         border: 1px solid rgba(255, 255, 255, 0.18);
     }
 
+
     h1 {
         text-align: center;
         color: #333;
         margin-bottom: 30px;
     }
+
 
     .status-logs {
         display: flex;
@@ -34,6 +37,7 @@
         margin-bottom: 30px;
         flex-wrap: wrap;
     }
+
 
     .log-box {
         flex: 1;
@@ -46,12 +50,16 @@
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         white-space: pre-wrap;
         overflow-x: auto;
+        max-height: 400px;  /* add max height so it scrolls */
+        overflow-y: auto;
     }
+
 
     table {
         width: 100%;
         border-collapse: collapse;
     }
+
 
     thead th {
         background-color: #6c63ff;
@@ -62,14 +70,17 @@
         border-radius: 8px 8px 0 0;
     }
 
+
     tbody tr {
         background-color: rgba(255, 255, 255, 0.7);
         transition: background-color 0.2s;
     }
 
+
     tbody tr:hover {
         background-color: #f3f3f3;
     }
+
 
     td {
         padding: 12px;
@@ -79,6 +90,7 @@
         color: #333;
     }
 
+
     .badge {
         display: inline-block;
         padding: 5px 10px;
@@ -87,15 +99,18 @@
         font-weight: 600;
     }
 
+
     .badge-success {
         background-color: #d4edda;
         color: #155724;
     }
 
+
     .badge-danger {
         background-color: #f8d7da;
         color: #721c24;
     }
+
 
     .project-name {
         font-weight: bold;
@@ -104,20 +119,23 @@
     }
 </style>
 
+
 <div class="glass-container">
     <h1>📘 Report Automation Dashboard</h1>
 
-    <div class="status-logs">
-        <div class="log-box">
-            <pre>{{ log_content.NRLDC }}</pre>
-        </div>
-        <div class="log-box">
-            <pre>{{ log_content.SRLDC }}</pre>
-        </div>
-        <div class="log-box">
-            <pre>{{ log_content.WRLDC }}</pre>
-        </div>
+
+<div class="status-logs">
+    <div class="log-box">
+        <p>{{ log_content.NRLDC|default:"No NRLDC logs available." }}</p>
     </div>
+    <div class="log-box">
+        <p>{{ log_content.SRLDC|default:"No SRLDC logs available." }}</p>
+    </div>  
+    <div class="log-box">
+        <p>{{ log_content.WRLDC|default:"No WRLDC logs available." }}</p>
+    </div>
+</div>
+
 
     <table>
         <thead>
@@ -154,4 +172,49 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    // URLs to fetch logs from (replace with your real endpoints)
+    // const logEndpoints = {
+    //     'log-nrldc': '/api/logs/nrldc/',
+    //     'log-srldc': '/api/logs/srldc/',
+    //     'log-wrldc': '/api/logs/wrldc/'
+    // };
+
+
+    function fetchLog(url, elementId) {
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                const logElement = document.getElementById(elementId);
+                if (logElement) {
+                    logElement.textContent = data.log || 'No logs available.';
+                    logElement.scrollTop = logElement.scrollHeight;  // Auto scroll to bottom
+                }
+            })
+            .catch(error => {
+                const logElement = document.getElementById(elementId);
+                if (logElement) {
+                    logElement.textContent = `Error fetching logs: ${error}`;
+                }
+                console.error('Error fetching logs for ' + elementId, error);
+            });
+    }
+
+
+    function updateAllLogs() {
+        for (const [elementId, url] of Object.entries(logEndpoints)) {
+            fetchLog(url, elementId);
+        }
+    }
+
+
+    // Initial fetch and then update every 3 seconds
+    updateAllLogs();
+    setInterval(updateAllLogs, 3000);
+
+</script>
 {% endblock %}

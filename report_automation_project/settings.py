@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'nrldc_app',
     'srldc_app',
     'wrldc_app',
-    'report_dashboard',
+    'report_dashboard','posoco'
 ]
 
 MIDDLEWARE = [

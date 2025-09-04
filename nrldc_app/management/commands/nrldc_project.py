@@ -1,13 +1,14 @@
-# nrldc_app/management/commands/nrldc_project.py
-
 import requests
 import datetime
 import os
 import pandas as pd
 import json
+import logging
+
 
 from django.core.management.base import BaseCommand, CommandError
 from nrldc_app.models import Nrldc2AData, Nrldc2CData
+
 
 # Explicit import of read_pdf to avoid attribute error with tabula-py >=1.0.0
 from tabula.io import read_pdf
@@ -15,6 +16,30 @@ from tabula.io import read_pdf
 
 class Command(BaseCommand):
     help = 'Download today\'s NRDC report and extract tables 2(A) and 2(C) to a single JSON file and save to DB'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, 'nrldc.log')
+
+        self.logger = logging.getLogger('nrldc_logger')
+        self.logger.setLevel(logging.INFO)
+
+        if not self.logger.hasHandlers():
+            fh = logging.FileHandler(log_file, encoding='utf-8')
+            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            fh.setFormatter(formatter)
+            self.logger.addHandler(fh)
+
+    def write(self, message, level='info'):
+        self.stdout.write(message)
+        if level == 'info':
+            self.logger.info(message)
+        elif level == 'warning':
+            self.logger.warning(message)
+        elif level == 'error':
+            self.logger.error(message)
 
     def extract_subtable_by_markers(self, df, start_marker, end_marker=None, header_row_count=0, debug_table_name="Unknown Table"):
         start_idx = None
@@ -26,7 +51,7 @@ class Command(BaseCommand):
                 break
 
         if start_idx is None:
-            self.stdout.write(self.style.WARNING(f"⚠️ Start marker '{start_marker}' not found for {debug_table_name}."))
+            self.write(self.style.WARNING(f"⚠️ Start marker '{start_marker}' not found for {debug_table_name}."), level='warning')
             return None
 
         if end_marker:
@@ -88,7 +113,7 @@ class Command(BaseCommand):
                         'Time.4'
                     ]
                 else:
-                    self.stdout.write(self.style.WARNING(f"⚠️ Custom header combination logic not defined for {debug_table_name}. Falling back to generic combination."))
+                    self.write(self.style.WARNING(f"⚠️ Custom header combination logic not defined for {debug_table_name}. Falling back to generic combination."), level='warning')
                     for idx in range(raw_top_header.shape[0]):
                         t_col = raw_top_header.iloc[idx].strip()
                         b_col = raw_bottom_header.iloc[idx].strip()
@@ -104,7 +129,7 @@ class Command(BaseCommand):
                         else:
                             new_columns.append(b_col)
             else:
-                self.stdout.write(self.style.WARNING(f"⚠️ Unsupported header_row_count: {header_row_count} for {debug_table_name}. Header processing skipped."))
+                self.write(self.style.WARNING(f"⚠️ Unsupported header_row_count: {header_row_count} for {debug_table_name}. Header processing skipped."), level='warning')
                 new_columns = None
 
             if new_columns is not None:
@@ -146,7 +171,7 @@ class Command(BaseCommand):
         return str(value).strip() if value is not None else None
 
     def extract_tables_from_pdf(self, pdf_path, output_dir, report_date):
-        self.stdout.write("🔍 Extracting tables from PDF...")
+        self.write("🔍 Extracting tables from PDF...")
 
         try:
             tables = read_pdf(
@@ -162,7 +187,7 @@ class Command(BaseCommand):
         if not tables:
             raise CommandError("❌ No tables found in the PDF.")
 
-        self.stdout.write(self.style.SUCCESS(f"✅ Found {len(tables)} tables."))
+        self.write(self.style.SUCCESS(f"✅ Found {len(tables)} tables."))
 
         all_content_df = pd.DataFrame()
         for df in tables:
@@ -200,8 +225,8 @@ class Command(BaseCommand):
             sub_2A_renamed = sub_2A.rename(columns=column_mapping_2A)
             sub_2A_filtered = sub_2A_renamed[[col for col in column_mapping_2A.values() if col in sub_2A_renamed.columns]]
 
-            combined_json_data['table_2A'] = sub_2A_filtered.to_dict(orient='records')
-            self.stdout.write(self.style.SUCCESS(f"✅ Table 2(A) extracted for combined JSON."))
+            combined_json_data['nrldc_table_2A'] = sub_2A_filtered.to_dict(orient='records')
+            self.write(self.style.SUCCESS(f"✅ Table 2(A) extracted for combined JSON."))
 
             for index, row_data in sub_2A_filtered.iterrows():
                 try:
@@ -225,14 +250,14 @@ class Command(BaseCommand):
                         }
                     )
                     if created:
-                        self.stdout.write(self.style.SUCCESS(f"➕ Created Table 2A entry for {report_date} - {row_data.get('state')}"))
+                        self.write(self.style.SUCCESS(f"➕ Created Table 2A entry for {report_date} - {row_data.get('state')}"))
                     else:
-                        self.stdout.write(self.style.SUCCESS(f"🔄 Updated Table 2A entry for {report_date} - {row_data.get('state')}"))
+                        self.write(self.style.SUCCESS(f"🔄 Updated Table 2A entry for {report_date} - {row_data.get('state')}"))
                 except Exception as e:
-                    self.stdout.write(self.style.ERROR(f"❌ Error saving Table 2A row to DB (State: {row_data.get('state')}): {e}"))
-            self.stdout.write(self.style.SUCCESS(f"✅ Table 2(A) data saved to database."))
+                    self.write(self.style.ERROR(f"❌ Error saving Table 2A row to DB (State: {row_data.get('state')}): {e}"), level='error')
+            self.write(self.style.SUCCESS(f"✅ Table 2(A) data saved to database."))
         else:
-            self.stdout.write(self.style.WARNING("⚠️ Table 2(A) not found or extraction failed."))
+            self.write(self.style.WARNING("⚠️ Table 2(A) not found or extraction failed."), level='warning')
 
         # Extract Table 2(C)
         sub_2C = self.extract_subtable_by_markers(
@@ -264,8 +289,8 @@ class Command(BaseCommand):
             sub_2C_renamed = sub_2C.rename(columns=column_mapping_2C)
             sub_2C_filtered = sub_2C_renamed[[col for col in column_mapping_2C.values() if col in sub_2C_renamed.columns]]
 
-            combined_json_data['table_2C'] = sub_2C_filtered.to_dict(orient='records')
-            self.stdout.write(self.style.SUCCESS(f"✅ Table 2(C) extracted for combined JSON."))
+            combined_json_data['nrldc_table_2C'] = sub_2C_filtered.to_dict(orient='records')
+            self.write(self.style.SUCCESS(f"✅ Table 2(C) extracted for combined JSON."))
 
             for index, row_data in sub_2C_filtered.iterrows():
                 try:
@@ -290,22 +315,22 @@ class Command(BaseCommand):
                         }
                     )
                     if created:
-                        self.stdout.write(self.style.SUCCESS(f"➕ Created Table 2C entry for {report_date} - {row_data.get('state')}"))
+                        self.write(self.style.SUCCESS(f"➕ Created Table 2C entry for {report_date} - {row_data.get('state')}"))
                     else:
-                        self.stdout.write(self.style.SUCCESS(f"🔄 Updated Table 2C entry for {report_date} - {row_data.get('state')}"))
+                        self.write(self.style.SUCCESS(f"🔄 Updated Table 2C entry for {report_date} - {row_data.get('state')}"))
                 except Exception as e:
-                    self.stdout.write(self.style.ERROR(f"❌ Error saving Table 2C row to DB (State: {self._safe_string(row_data.get('state'))}): {e}"))
-            self.stdout.write(self.style.SUCCESS(f"✅ Table 2(C) data saved to database."))
+                    self.write(self.style.ERROR(f"❌ Error saving Table 2C row to DB (State: {self._safe_string(row_data.get('state'))}): {e}"), level='error')
+            self.write(self.style.SUCCESS(f"✅ Table 2(C) data saved to database."))
         else:
-            self.stdout.write(self.style.WARNING("⚠️ Table 2(C) not found or extraction failed."))
+            self.write(self.style.WARNING("⚠️ Table 2(C) not found or extraction failed."), level='warning')
 
         if combined_json_data:
             combined_json_path = os.path.join(output_dir, 'nrdc_report_tables.json')
             with open(combined_json_path, 'w', encoding='utf-8') as f:
                 json.dump(combined_json_data, f, indent=4, ensure_ascii=False)
-            self.stdout.write(self.style.SUCCESS(f"✅ Combined tables saved to: {combined_json_path}"))
+            self.write(self.style.SUCCESS(f"✅ Combined tables saved to: {combined_json_path}"))
         else:
-            self.stdout.write(self.style.WARNING("⚠️ No tables were successfully extracted to create a combined JSON file."))
+            self.write(self.style.WARNING("⚠️ No tables were successfully extracted to create a combined JSON file."), level='warning')
 
     def handle(self, *args, **options):
         today = datetime.date.today()
@@ -314,7 +339,7 @@ class Command(BaseCommand):
 
         if Nrldc2AData.objects.filter(report_date=today).exists() or \
            Nrldc2CData.objects.filter(report_date=today).exists():
-            self.stdout.write(self.style.SUCCESS(f"✅ Pass: Report data for {today_str} already exists in the database. Skipping download and extraction."))
+            self.write(self.style.SUCCESS(f"✅ Pass: Report data for {today_str} already exists in the database. Skipping download and extraction."))
             return
 
         url = f"https://nrldc.in/get-documents-list/111?start_date={today_str}&end_date={today_str}"
@@ -325,7 +350,7 @@ class Command(BaseCommand):
             "Referer": "https://nrldc.in/reports/daily-psp",
         }
 
-        self.stdout.write(f"🌐 Fetching NRDC report metadata for {today_str}...")
+        self.write(f"🌐 Fetching NRDC report metadata for {today_str}...")
         try:
             response = requests.get(url, headers=headers)
             response.raise_for_status()
@@ -338,7 +363,7 @@ class Command(BaseCommand):
             raise CommandError(f"❌ Failed to parse JSON response: {e}")
 
         if data.get("recordsFiltered", 0) == 0:
-            self.stdout.write(self.style.WARNING(f"⚠️ No report available for today ({today_str}). This might be due to weekends, holidays, or late publishing."))
+            self.write(self.style.WARNING(f"⚠️ No report available for today ({today_str}). This might be due to weekends, holidays, or late publishing."), level='warning')
             return
 
         file_info = data["data"][0]
@@ -350,17 +375,17 @@ class Command(BaseCommand):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         output_dir = os.path.join("downloads", project_name, f"report_{timestamp}")
         os.makedirs(output_dir, exist_ok=True)
-        self.stdout.write(f"📁 Created output directory: {output_dir}")
+        self.write(f"📁 Created output directory: {output_dir}")
 
         pdf_path = os.path.join(output_dir, f"{title}.pdf")
-        self.stdout.write(f"⬇️ Attempting to download PDF to: {pdf_path}")
+        self.write(f"⬇️ Attempting to download PDF to: {pdf_path}")
 
         try:
             pdf_response = requests.get(download_url, headers=headers)
             pdf_response.raise_for_status()
             with open(pdf_path, "wb") as f:
                 f.write(pdf_response.content)
-            self.stdout.write(self.style.SUCCESS(f"✅ Downloaded report to: {pdf_path}"))
+            self.write(self.style.SUCCESS(f"✅ Downloaded report to: {pdf_path}"))
         except Exception as e:
             raise CommandError(f"❌ Failed to download PDF: {e}")
 
