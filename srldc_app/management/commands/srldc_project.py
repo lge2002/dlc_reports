@@ -497,7 +497,9 @@ class Command(BaseCommand):
 
 
         if combined_json_data:
-            combined_json_path = os.path.join(output_dir, 'srldc_report_tables.json')
+            # Always use today's date for the filename
+            today_str = datetime.date.today().strftime('%Y-%m-%d')
+            combined_json_path = os.path.join(output_dir, f'srdc_report_tables_{today_str}.json')
             with open(combined_json_path, 'w', encoding='utf-8') as f:
                 json.dump(combined_json_data, f, indent=4, ensure_ascii=False)
             self.stdout.write(self.style.SUCCESS(f"✅ Combined tables saved to: {combined_json_path}"))
@@ -533,7 +535,8 @@ class Command(BaseCommand):
             
             full_url = f"{base_url}{directory_path_on_server}{file_name_on_server}"
             
-            report_dir = os.path.join(base_download_dir, f"report_{current_date.strftime('%Y-%m-%d')}")
+            now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            report_dir = os.path.join(base_download_dir, f"report_{now_str}")
             os.makedirs(report_dir, exist_ok=True)
             self.stdout.write(f"📁 Checking/Created report directory: {report_dir}")
 

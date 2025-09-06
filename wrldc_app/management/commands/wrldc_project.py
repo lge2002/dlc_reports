@@ -27,44 +27,55 @@ class Command(BaseCommand):
         "MADHYA PRADESH", "MAHARASHTRA", "RIL JAMNAGAR", "WR"
     ]
 
-    def _safe_string(self, value):
+    def _safe_value(self, value, is_numeric=False):
         """
-        Safely converts a value to a string, handling NaN, None, and newlines.
+        Keeps dash '-' as-is, returns None for real empty values,
+        converts numbers properly.
         """
         if pd.isna(value) or value is None:
             return None
+
         s_val = str(value).strip()
+
+        # If it's a dash or similar marker, keep it as-is
+        if s_val in ['-', '--']:
+            return s_val
+
+        # If it's empty/NaN/None, return None
         if s_val.lower() in ('nan', 'none', ''):
             return None
-        s_val = s_val.replace('\r', ' ').strip()
-        return s_val if s_val else None
+
+        # For numeric columns, try to convert to float/int
+        if is_numeric:
+            s_val = s_val.replace(',', '')  # remove commas
+            try:
+                return float(s_val)
+            except ValueError:
+                return s_val  # keep original if not a number (like "N/A")
+
+        # For string columns
+        return s_val
 
     def _cleanup_dataframe(self, df, numeric_cols, string_cols):
-        """
-        A robust helper function to clean up DataFrame columns for database saving.
-        It replaces common non-numeric placeholders with None and converts numeric columns.
-        This version is more explicit about converting NaNs to None.
-        """
+
         df_cleaned = df.copy()
 
-        # Clean up string columns first
+        # Clean string columns
         for col in string_cols:
             if col in df_cleaned.columns:
-                df_cleaned[col] = df_cleaned[col].apply(self._safe_string)
+                df_cleaned[col] = df_cleaned[col].apply(
+                    lambda x: self._safe_value(x, is_numeric=False)
+                )
 
-        # Replace common non-numeric placeholders with None for numeric columns
+        # Clean numeric columns
         for col in numeric_cols:
             if col in df_cleaned.columns:
-                df_cleaned[col] = df_cleaned[col].replace(['-', '', ' ', '--', 'nan', 'NaN', np.nan], None)
-                # Remove commas from the string representation
-                df_cleaned[col] = df_cleaned[col].astype(str).str.replace(',', '', regex=False)
-                # Convert to numeric, coercing errors to NaN
-                df_cleaned[col] = pd.to_numeric(df_cleaned[col], errors='coerce')
-        
-        # CRITICAL FIX: Replace pandas NaN values with None for database compatibility
-        df_cleaned = df_cleaned.replace({np.nan: None})
-        
+                df_cleaned[col] = df_cleaned[col].apply(
+                    lambda x: self._safe_value(x, is_numeric=True)
+                )
+
         return df_cleaned
+
 
     def extract_subtable_by_markers(self, df, start_marker, end_marker=None, header_row_count=0, debug_table_name="Unknown Table"):
         """
@@ -333,8 +344,9 @@ class Command(BaseCommand):
 
 
         if combined_json_data:
-            combined_json_path = os.path.join(output_dir, 'wrldc_report_tables.json')
-            
+            # Save JSON file with today's date
+            date_str = datetime.datetime.now().strftime('%Y-%m-%d')
+            combined_json_path = os.path.join(output_dir, f'wrdc_report_tables_{date_str}.json')
             with open(combined_json_path, 'w', encoding='utf-8') as f:
                 json.dump(combined_json_data, f, indent=4, ensure_ascii=False)
             self.stdout.write(self.style.SUCCESS(f"✅ Combined tables saved to: {combined_json_path}"))
@@ -362,10 +374,9 @@ class Command(BaseCommand):
             file_name_on_server = f"WRLDC_PSP_Report_{day:02d}-{current_date.month:02d}-{year}.pdf"
 
             full_url = f"{new_base_url}{directory_path_on_server}{file_name_on_server}"
-            
-            # Use a format string with both date and time for the directory name
-            report_dir = os.path.join(base_download_dir, f"report_{current_date.strftime('%Y-%m-%d_%H-%M-%S')}")
-            
+            # Use current date and time for the directory name
+            now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            report_dir = os.path.join(base_download_dir, f"report_{now_str}")
             os.makedirs(report_dir, exist_ok=True)
             self.stdout.write(f"📁 Checking/Created report directory: {report_dir}")
 
