@@ -11,28 +11,141 @@ report_dirs = {
     'POSOCO': 'downloads/POSOCO'
 }
 
-# Get today's date string in the format used in folder names (YYYY-MM-DD)
+# Define empty templates with keys and None values for missing data cases
+empty_templates = {
+    'NRLDC': {
+        "nrldc_table_2A": [{
+            "state": None,
+            "thermal": None,
+            "hydro": None,
+            "gas_naptha_diesel": None,
+            "solar": None,
+            "wind": None,
+            "other_biomass_co_gen_etc": None,
+            "total": None,
+            "drawal_sch": None,
+            "act_drawal": None,
+            "ui": None,
+            "requirement": None,
+            "shortage": None,
+            "consumption": None
+        }],
+        "nrldc_table_2C": [{
+            "state": None,
+            "max_demand_met_of_the_day": None,
+            "time_max_demand_met": None,
+            "shortage_during_max_demand": None,
+            "requirement_at_max_demand": None,
+            "max_requirement_of_the_day": None,
+            "time_max_requirement": None,
+            "shortage_during_max_requirement": None,
+            "demand_met_at_max_requirement": None,
+            "min_demand_met": None,
+            "time_min_demand_met": None,
+            "ace_max": None,
+            "time_ace_max": None,
+            "ace_min": None,
+            "time_ace_min": None
+        }]
+    },
+    'SRLDC': {
+        "srldc_table_2A": [{
+            "state": None,
+            "thermal": None,
+            "hydro": None,
+            "gas_naptha_diesel": None,
+            "solar": None,
+            "wind": None,
+            "others": None,
+            "net_sch": None,
+            "drawal": None,
+            "ui": None,
+            "availability": None,
+            "demand_met": None,
+            "shortage": None
+        }],
+        "srldc_table_2C": [{
+            "state": None,
+            "max_demand_met_of_the_day": None,
+            "time": None,
+            "shortage_during_max_demand": None,
+            "requirement_at_max_demand": None,
+            "demand_met_max_requirement": None,
+            "time_max_requirement": None,
+            "shortage_during_max_requirement": None,
+            "max_requirement_day": None,
+            "ace_min": None,
+            "time_ace_min": None,
+            "ace_max": None,
+            "time_ace_max": None
+        }]
+    },
+    'WRLDC': {
+        "wrldc_table_2A": [{
+            "state": None,
+            "thermal": None,
+            "hydro": None,
+            "gas": None,
+            "wind": None,
+            "solar": None,
+            "others": None,
+            "total": None,
+            "net_sch": None,
+            "drawal": None,
+            "ui": None,
+            "availability": None,
+            "requirement": None,
+            "shortage": None,
+            "consumption": None
+        }],
+        "wrldc_table_2C": [{
+            "state": None,
+            "max_demand_met_of_the_day": None,
+            "time": None,
+            "shortage_during_max_demand": None,
+            "requirement_at_max_demand": None,
+            "ace_max": None,
+            "time_ace_max": None,
+            "ace_min": None,
+            "time_ace_min": None
+        }]
+    },
+    'POSOCO': {
+        "posoco_table_a": [{
+            "demand Met during evening peak hrs (MW) at 20:00 hr": None,
+            "peak shortage": None,
+            "energy met": None,
+            "hydro gen": None,
+            "wind gen": None,
+            "solar gen": None,
+            "energy shortage": None,
+            "maximum demand met during the day": None,
+            "time of maximum demand met": None
+        }],
+        "posoco_table_g": [{
+            "coal": None,
+            "lignite": None,
+            "hydro": None,
+            "nuclear": None,
+            "gas, naptha & diesel": None,
+            "res (wind, solar, biomass & others)": None,
+            "total": None
+        }]
+    }
+}
+
 today_str = datetime.now().strftime('%Y-%m-%d')
-
-
-# Collect latest JSON file for each region for today
 merged_array = []
 
 for region, report_dir in report_dirs.items():
-    latest_json = None
-    latest_time = None
     try:
-        # Find all subdirs for today
         today_subdirs = [d for d in os.listdir(report_dir) if today_str in d]
         if today_subdirs:
-            # Sort subdirs by timestamp in name (assuming format: report_YYYY-MM-DD_HH-MM-SS)
             today_subdirs.sort(reverse=True)
             latest_subdir = today_subdirs[0]
             full_subdir = os.path.join(report_dir, latest_subdir)
-            # Find all JSON files in this subdirectory
             json_files = glob(os.path.join(full_subdir, '*.json'))
             if json_files:
-                # Sort JSON files by modified time
                 json_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
                 latest_json_path = json_files[0]
                 try:
@@ -41,38 +154,35 @@ for region, report_dir in report_dirs.items():
                     merged_array.append(data)
                 except Exception as e:
                     print(f"Error reading {latest_json_path}: {e}")
-                    # Add a message to the merged array
-                    merged_array.append({
-                        "region": region,
-                        "status": "missing",
-                        "message": f"Error reading file: {str(e)}"
-                    })
+                    # Append empty template if file read fails
+                    empty_data = empty_templates.get(region)
+                    if empty_data:
+                        merged_array.append(empty_data)
+                    else:
+                        merged_array.append({"region": region, "status": "missing", "message": f"Error reading file: {str(e)}"})
             else:
                 print(f"No JSON files found in {full_subdir} for {region}")
-                # Add a message to the merged array
-                merged_array.append({
-                    "region": region,
-                    "status": "missing",
-                    "message": "No JSON files found."
-                })
+                empty_data = empty_templates.get(region)
+                if empty_data:
+                    merged_array.append(empty_data)
+                else:
+                    merged_array.append({"region": region, "status": "missing", "message": "No JSON files found."})
         else:
             print(f"No subdirs for today in {report_dir} for {region}")
-            # Add a message to the merged array
-            merged_array.append({
-                "region": region,
-                "status": "missing",
-                "message": "No directory found for today's date."
-            })
+            empty_data = empty_templates.get(region)
+            if empty_data:
+                merged_array.append(empty_data)
+            else:
+                merged_array.append({"region": region, "status": "missing", "message": "No directory found for today's date."})
     except FileNotFoundError:
         print(f"Directory not found: {report_dir}")
-        # Add a message to the merged array
-        merged_array.append({
-            "region": region,
-            "status": "missing",
-            "message": f"Report directory not found: {report_dir}"
-        })
+        empty_data = empty_templates.get(region)
+        if empty_data:
+            merged_array.append(empty_data)
+        else:
+            merged_array.append({"region": region, "status": "missing", "message": f"Report directory not found: {report_dir}"})
 
-# Create output folder with date and time
+# Save merged JSON
 output_dir = os.path.join('downloads', 'overall_json')
 os.makedirs(output_dir, exist_ok=True)
 timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')

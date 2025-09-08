@@ -51,7 +51,7 @@ class Command(BaseCommand):
             try:
                 return float(s_val)
             except ValueError:
-                return s_val  # keep original if not a number (like "N/A")
+                return s_val  
 
         # For string columns
         return s_val

@@ -18,12 +18,14 @@ class Command(BaseCommand):
             file_date = date_to_check.strftime("%d.%m.%y")
             # Updated URL pattern without suffix _327
             url = f"https://webcdn.grid-india.in/files/grdw/{year}/{month}/{file_date}_NLDC_PSP.pdf"
+            print(url)
             resp = requests.get(url)
             if resp.status_code == 200:
                 self.stdout.write(self.style.SUCCESS(f"Downloaded PDF for {file_date}"))
                 return resp.content
         self.stdout.write(self.style.ERROR(f"Could not download PDF for the last {days} days."))
         return None
+    
 
     def extract_tables_from_pdf(self, pdf_bytes, table_indices=(1, 7)):
         pdf_io = io.BytesIO(pdf_bytes)
