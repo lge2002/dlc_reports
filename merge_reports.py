@@ -110,26 +110,29 @@ empty_templates = {
             "time_ace_min": None
         }]
     },
-    'POSOCO': {
-        "posoco_table_a": [{
-            "demand Met during evening peak hrs (MW) at 20:00 hr": None,
-            "peak shortage": None,
-            "energy met": None,
-            "hydro gen": None,
-            "wind gen": None,
-            "solar gen": None,
-            "energy shortage": None,
-            "maximum demand met during the day": None,
-            "time of maximum demand met": None
-        }],
-        "posoco_table_g": [{
-            "coal": None,
-            "lignite": None,
-            "hydro": None,
-            "nuclear": None,
-            "gas, naptha & diesel": None,
-            "res (wind, solar, biomass & others)": None,
-            "total": None
+    "POSOCO": {
+        "posoco_table_a": [
+            {
+                "demand met during evening peak hrs (mw) at 20:00 hr": None,
+                "peak shortage": None,
+                "energy met": None,
+                "hydro gen": None,
+                "wind gen": None,
+                "solar gen": None,
+                "energy shortage": None,
+                "maximum demand met during the day": None,
+                "time of maximum demand met": None
+            }
+        ],
+        "posoco_table_g": [
+            {
+                "coal": None,
+                "lignite": None,
+                "hydro": None,
+                "nuclear": None,
+                "gas, naptha & diesel": None,
+                "res (wind, solar, biomass & others)": None,
+                "total": None
         }]
     }
 }
