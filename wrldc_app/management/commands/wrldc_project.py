@@ -261,10 +261,10 @@ class Command(BaseCommand):
 
             manual_columns = [
                 'state',
-                'max_demand_met_of_the_day',
+                'max_demand_day',
                 'time',
-                'shortage_during_max_demand',
-                'requirement_at_max_demand',
+                'shortage_max_demand',
+                'req_max_demand',
                 'ace_max',
                 'time_ace_max',
                 'ace_min',
@@ -287,8 +287,8 @@ class Command(BaseCommand):
 
             # --- START DEDICATED DATA CLEANING STEP FOR TABLE 2C ---
             numeric_cols_2C = [
-                'max_demand_met_of_the_day', 'shortage_during_max_demand',
-                'requirement_at_max_demand', 'ace_max', 'ace_min'
+                'max_demand_day', 'shortage_max_demand',
+                'req_max_demand', 'ace_max', 'ace_min'
             ]
             string_cols_2C = ['state', 'time', 'time_ace_max', 'time_ace_min']
             
@@ -326,10 +326,10 @@ class Command(BaseCommand):
                     Wrldc2CData.objects.update_or_create(
                         report_date=report_date, state=row_data['state'],
                         defaults={
-                            'max_demand_met_of_the_day': row_data.get('max_demand_met_of_the_day'),
+                            'max_demand_day': row_data.get('max_demand_day'),
                             'time': row_data.get('time'),
-                            'shortage_during_max_demand': row_data.get('shortage_during_max_demand'),
-                            'requirement_at_max_demand': row_data.get('requirement_at_max_demand'),
+                            'shortage_max_demand': row_data.get('shortage_max_demand'),
+                            'req_max_demand': row_data.get('req_max_demand'),
                             'ace_max': row_data.get('ace_max'),
                             'time_ace_max': row_data.get('time_ace_max'),
                             'ace_min': row_data.get('ace_min'),

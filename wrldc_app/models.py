@@ -35,10 +35,10 @@ class Wrldc2CData(models.Model):
     report_date = models.DateField(default=date.today)
     state = models.CharField(max_length=100, null=True, blank=True)
 
-    max_demand_met_of_the_day = models.FloatField(null=True, blank=True)
+    max_demand_day = models.FloatField(null=True, blank=True)
     time = models.CharField(max_length=50, null=True, blank=True)
-    shortage_during_max_demand = models.CharField(max_length=50, null=True, blank=True)   
-    requirement_at_max_demand = models.CharField(max_length=50, null=True, blank=True)    
+    shortage_max_demand = models.CharField(max_length=50, null=True, blank=True)   
+    req_max_demand = models.CharField(max_length=50, null=True, blank=True)    
     ace_max = models.CharField(max_length=50, null=True, blank=True)                      
     time_ace_max = models.CharField(max_length=50, null=True, blank=True)
     ace_min = models.CharField(max_length=50, null=True, blank=True)                      

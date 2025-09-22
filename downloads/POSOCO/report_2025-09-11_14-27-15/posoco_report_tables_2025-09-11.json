@@ -1,0 +1,147 @@
+{
+    "POSOCO": {
+        "posoco_table_a": [
+            {
+                "Demand Met during Evening Peak hrs(MW) (at\r20:00 hrs; from RLDCs)": {
+                    "NR": "73159",
+                    "WR": "61844",
+                    "SR": "51154",
+                    "ER": "29844",
+                    "NER": "3750",
+                    "TOTAL": "219751"
+                },
+                "Peak Shortage (MW)": {
+                    "NR": "295",
+                    "WR": "429",
+                    "SR": "0",
+                    "ER": "0",
+                    "NER": "0",
+                    "TOTAL": "724"
+                },
+                "Energy Met (MU)": {
+                    "NR": "1558",
+                    "WR": "1419",
+                    "SR": "1298",
+                    "ER": "667",
+                    "NER": "73",
+                    "TOTAL": "5014"
+                },
+                "Hydro Gen (MU)": {
+                    "NR": "393",
+                    "WR": "121",
+                    "SR": "180",
+                    "ER": "107",
+                    "NER": "35",
+                    "TOTAL": "835"
+                },
+                "Wind Gen (MU)": {
+                    "NR": "13",
+                    "WR": "86",
+                    "SR": "80",
+                    "ER": "-",
+                    "NER": "-",
+                    "TOTAL": "179"
+                },
+                "Solar Gen (MU)*": {
+                    "NR": "196.08",
+                    "WR": "123.95",
+                    "SR": "131.23",
+                    "ER": "3.57",
+                    "NER": "0.62",
+                    "TOTAL": "455"
+                },
+                "Energy Shortage (MU)": {
+                    "NR": "1.10",
+                    "WR": "1.26",
+                    "SR": "0.00",
+                    "ER": "0.00",
+                    "NER": "0.00",
+                    "TOTAL": "2.36"
+                },
+                "Maximum Demand Met During the Day (MW)\r(From NLDC SCADA)": {
+                    "NR": "74175",
+                    "WR": "65630",
+                    "SR": "62006",
+                    "ER": "31096",
+                    "NER": "3795",
+                    "TOTAL": "222911"
+                },
+                "Time Of Maximum Demand Met": {
+                    "NR": "22:16",
+                    "WR": "18:56",
+                    "SR": "10:53",
+                    "ER": "22:39",
+                    "NER": "18:28",
+                    "TOTAL": "19:28"
+                }
+            }
+        ],
+        "posoco_table_g": [
+            {
+                "Coal": {
+                    "NR": 782,
+                    "WR": 1388,
+                    "SR": 682,
+                    "ER": 676,
+                    "NER": 14,
+                    "All India": 3542,
+                    "% Share": 66
+                },
+                "Lignite": {
+                    "NR": 26,
+                    "WR": 12,
+                    "SR": 40,
+                    "ER": 0,
+                    "NER": 0,
+                    "All India": 78,
+                    "% Share": 1
+                },
+                "Hydro": {
+                    "NR": 393,
+                    "WR": 121,
+                    "SR": 180,
+                    "ER": 107,
+                    "NER": 35,
+                    "All India": 835,
+                    "% Share": 16
+                },
+                "Nuclear": {
+                    "NR": 42,
+                    "WR": 48,
+                    "SR": 41,
+                    "ER": 0,
+                    "NER": 0,
+                    "All India": 132,
+                    "% Share": 2
+                },
+                "Gas, Naptha & Diesel": {
+                    "NR": 28,
+                    "WR": 62,
+                    "SR": 8,
+                    "ER": 0,
+                    "NER": 22,
+                    "All India": 120,
+                    "% Share": 2
+                },
+                "RES (Wind, Solar, Biomass & Others)": {
+                    "NR": 214,
+                    "WR": 211,
+                    "SR": 239,
+                    "ER": 6,
+                    "NER": 1,
+                    "All India": 672,
+                    "% Share": 12
+                },
+                "Total": {
+                    "NR": 1484,
+                    "WR": 1842,
+                    "SR": 1191,
+                    "ER": 789,
+                    "NER": 72,
+                    "All India": 5378,
+                    "% Share": 100
+                }
+            }
+        ]
+    }
+}
