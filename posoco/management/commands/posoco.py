@@ -96,11 +96,15 @@ def extract_tables_from_pdf(pdf_file, report_dir, timestamp):
     }
 
     tables = tabula.read_pdf(pdf_file, pages="all", multiple_tables=True, lattice=True)
+    # print(f"[DEBUG] Number of tables extracted: {len(tables)}")
+    # for idx, table in enumerate(tables):
+    #     print(f"[DEBUG] Table {idx} columns: {list(table.columns) if hasattr(table, 'columns') else 'N/A'}")
+    #     print(f"[DEBUG] Table {idx} head:\n{table.head() if hasattr(table, 'head') else table}")
     final_json = {"POSOCO": {"posoco_table_a": [], "posoco_table_g": []}}
 
-    # Process Table A (assuming it's the 2nd table found)
-    if len(tables) > 1 and not tables[1].empty:
-        df1 = tables[1].dropna(how="all").reset_index(drop=True)
+    # Process Table A (now using the 1st table found)
+    if len(tables) > 0 and not tables[0].empty:
+        df1 = tables[0].dropna(how="all").reset_index(drop=True)
         table_a_dict = {}
         for _, row in df1.iterrows():
             row_dict = row.to_dict()
@@ -113,9 +117,9 @@ def extract_tables_from_pdf(pdf_file, report_dir, timestamp):
                 table_a_dict[short_key] = row_dict
         final_json["POSOCO"]["posoco_table_a"].append(table_a_dict)
 
-    # Process Table G (assuming it's the 8th table found)
-    if len(tables) > 7 and not tables[7].empty:
-        df7 = tables[7].dropna(how="all").reset_index(drop=True)
+    # Process Table G (now using the 7th table found)
+    if len(tables) > 6 and not tables[6].empty:
+        df7 = tables[6].dropna(how="all").reset_index(drop=True)
         table_g_dict = {}
         for _, row in df7.iterrows():
             row_dict = row.to_dict()
@@ -125,6 +129,48 @@ def extract_tables_from_pdf(pdf_file, report_dir, timestamp):
                 short_key = KEY_MAPPING.get(clean_key, clean_key)
                 table_g_dict[short_key] = row_dict
         final_json["POSOCO"]["posoco_table_g"].append(table_g_dict)
+
+    # Check if both tables are empty or only contain empty dicts
+    is_table_a_empty = (
+        not final_json["POSOCO"]["posoco_table_a"] or
+        all(not bool(d) for d in final_json["POSOCO"]["posoco_table_a"])
+    )
+    is_table_g_empty = (
+        not final_json["POSOCO"]["posoco_table_g"] or
+        all(not bool(d) for d in final_json["POSOCO"]["posoco_table_g"])
+    )
+
+    if is_table_a_empty and is_table_g_empty:
+        # Use the empty template if no real data was extracted
+        final_json = {
+            "POSOCO": {
+                "posoco_table_a": [
+                    {
+                        "demand_evening_peak": None,
+                        "peak_shortage": None,
+                        "energy": None,
+                        "hydro": None,
+                        "wind": None,
+                        "solar": None,
+                        "energy_shortage": None,
+                        "max_demand_day": None,
+                        "time_of_max_demand": None
+                    }
+                ],
+                "posoco_table_g": [
+                    {
+                        "coal": None,
+                        "lignite": None,
+                        "hydro": None,
+                        "nuclear": None,
+                        "gas_naptha_diesel": None,
+                        "res_total": None,
+                        "total": None
+                    }
+                ]
+            }
+        }
+        print("⚠️ No real data extracted from POSOCO PDF. Using empty template.")
 
     # Save the final JSON to a file
     date_str = datetime.now().strftime("%Y-%m-%d")
@@ -147,33 +193,46 @@ def save_to_db(final_json):
         # Save data from Table A
         for row_dict in final_json["POSOCO"]["posoco_table_a"]:
             for category, values in row_dict.items():
+                if values is None:
+                    continue
+                if not isinstance(values, dict):
+                    continue
+                # Skip if all values are None
+                if all(v is None for v in values.values()):
+                    continue
                 PosocoTableA.objects.update_or_create(
                     category=category,
                     report_date=today,
                     defaults={
-                        'nr': values.get("NR"),
-                        'wr': values.get("WR"),
-                        'sr': values.get("SR"),
-                        'er': values.get("ER"),
-                        'ner': values.get("NER"),
-                        'total': values.get("TOTAL"),
+                        'nr': values.get("NR") if values else None,
+                        'wr': values.get("WR") if values else None,
+                        'sr': values.get("SR") if values else None,
+                        'er': values.get("ER") if values else None,
+                        'ner': values.get("NER") if values else None,
+                        'total': values.get("TOTAL") if values else None,
                     }
                 )
 
         # Save data from Table G
         for row_dict in final_json["POSOCO"]["posoco_table_g"]:
             for fuel, values in row_dict.items():
+                if values is None:
+                    continue
+                if not isinstance(values, dict):
+                    continue
+                if all(v is None for v in values.values()):
+                    continue
                 PosocoTableG.objects.update_or_create(
                     fuel_type=fuel,
                     report_date=today,
                     defaults={
-                        'nr': values.get("NR"),
-                        'wr': values.get("WR"),
-                        'sr': values.get("SR"),
-                        'er': values.get("ER"),
-                        'ner': values.get("NER"),
-                        'all_india': values.get("All India"),
-                        'share_percent': values.get("% Share"),
+                        'nr': values.get("NR") if values else None,
+                        'wr': values.get("WR") if values else None,
+                        'sr': values.get("SR") if values else None,
+                        'er': values.get("ER") if values else None,
+                        'ner': values.get("NER") if values else None,
+                        'all_india': values.get("All India") if values else None,
+                        'share_percent': values.get("% Share") if values else None,
                     }
                 )
         print("✅ Data saved to database successfully")

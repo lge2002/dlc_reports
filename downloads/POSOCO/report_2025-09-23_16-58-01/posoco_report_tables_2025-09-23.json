@@ -1,0 +1,147 @@
+{
+    "POSOCO": {
+        "posoco_table_a": [
+            {
+                "demand_evening_peak": {
+                    "NR": "77980",
+                    "WR": "63429",
+                    "SR": "48327",
+                    "ER": "28584",
+                    "NER": "3563",
+                    "TOTAL": "221913"
+                },
+                "peak_shortage": {
+                    "NR": "0",
+                    "WR": "0",
+                    "SR": "0",
+                    "ER": "0",
+                    "NER": "0",
+                    "TOTAL": "0"
+                },
+                "energy": {
+                    "NR": "1732",
+                    "WR": "1476",
+                    "SR": "1106",
+                    "ER": "628",
+                    "NER": "70",
+                    "TOTAL": "5012"
+                },
+                "hydro": {
+                    "NR": "376",
+                    "WR": "118",
+                    "SR": "162",
+                    "ER": "107",
+                    "NER": "39",
+                    "TOTAL": "802"
+                },
+                "wind": {
+                    "NR": "20",
+                    "WR": "72",
+                    "SR": "204",
+                    "ER": "-",
+                    "NER": "-",
+                    "TOTAL": "297"
+                },
+                "solar": {
+                    "NR": "225.18",
+                    "WR": "140.50",
+                    "SR": "127.86",
+                    "ER": "2.97",
+                    "NER": "1.05",
+                    "TOTAL": "498"
+                },
+                "energy_shortage": {
+                    "NR": "0.00",
+                    "WR": "0.00",
+                    "SR": "0.00",
+                    "ER": "0.00",
+                    "NER": "0.00",
+                    "TOTAL": "0.00"
+                },
+                "max_demand_day": {
+                    "NR": "78605",
+                    "WR": "67707",
+                    "SR": "51482",
+                    "ER": "28831",
+                    "NER": "3573",
+                    "TOTAL": "226108"
+                },
+                "time_of_max_demand": {
+                    "NR": "22:28",
+                    "WR": "18:53",
+                    "SR": "11:46",
+                    "ER": "18:57",
+                    "NER": "18:29",
+                    "TOTAL": "19:12"
+                }
+            }
+        ],
+        "posoco_table_g": [
+            {
+                "coal": {
+                    "NR": 789,
+                    "WR": 1355,
+                    "SR": 636,
+                    "ER": 647,
+                    "NER": 12,
+                    "All India": 3439,
+                    "% Share": 64
+                },
+                "lignite": {
+                    "NR": 23,
+                    "WR": 15,
+                    "SR": 54,
+                    "ER": 0,
+                    "NER": 0,
+                    "All India": 91,
+                    "% Share": 2
+                },
+                "hydro": {
+                    "NR": 376,
+                    "WR": 118,
+                    "SR": 162,
+                    "ER": 107,
+                    "NER": 39,
+                    "All India": 802,
+                    "% Share": 15
+                },
+                "nuclear": {
+                    "NR": 37,
+                    "WR": 62,
+                    "SR": 36,
+                    "ER": 0,
+                    "NER": 0,
+                    "All India": 134,
+                    "% Share": 2
+                },
+                "gas_naptha_diesel": {
+                    "NR": 13,
+                    "WR": 32,
+                    "SR": 10,
+                    "ER": 0,
+                    "NER": 22,
+                    "All India": 76,
+                    "% Share": 1
+                },
+                "res_total": {
+                    "NR": 252,
+                    "WR": 216,
+                    "SR": 358,
+                    "ER": 5,
+                    "NER": 1,
+                    "All India": 832,
+                    "% Share": 15
+                },
+                "total": {
+                    "NR": 1489,
+                    "WR": 1798,
+                    "SR": 1255,
+                    "ER": 759,
+                    "NER": 73,
+                    "All India": 5375,
+                    "% Share": 100
+                }
+            }
+        ]
+    }
+}
