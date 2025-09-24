@@ -4,6 +4,8 @@ import requests # Import the requests library
 from glob import glob
 from datetime import datetime
 
+from requests_cache import timedelta
+
 # --- YOUR EXISTING CODE (UNCHANGED) ---
 
 # Directories to search for report JSON files
@@ -70,7 +72,7 @@ empty_templates = {
     }
 }
 
-today_str = datetime.now().strftime('%Y-%m-%d')
+today_str = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 merged_data = {}
 
 for region, report_dir in report_dirs.items():
@@ -120,6 +122,8 @@ for region, report_dir in report_dirs.items():
 # 1. Define the base API URL and construct the full URL with today's date
 BASE_API_URL = "http://172.16.7.118:8003/api/tamilnadu/wind/api.grid.php"
 api_url_with_date = f"{BASE_API_URL}?date={today_str}"
+print("this is ur api_url_with_date:", api_url_with_date)
+
 
 # 2. Set up the request headers. Since no token was mentioned, we only need Content-Type.
 headers = {
