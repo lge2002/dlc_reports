@@ -3,8 +3,9 @@ import os
 import requests
 import tabula
 import json
-from datetime import datetime
+from datetime import datetime , timedelta 
 from posoco.models import PosocoTableA, PosocoTableG
+import pandas as pd # Add this import at the top of your file
 
 # --- Constants ---
 API_URL = "https://webapi.grid-india.in/api/v1/file"
@@ -25,7 +26,6 @@ def make_report_dir(base_dir):
     report_dir = os.path.join(base_dir, f"report_{timestamp}")
     os.makedirs(report_dir, exist_ok=True)
     return report_dir, timestamp
-
 
 def fetch_latest_pdf(api_url, base_url, payload, report_dir, timestamp):
     """Fetches and downloads the latest PDF report."""
@@ -51,8 +51,19 @@ def fetch_latest_pdf(api_url, base_url, payload, report_dir, timestamp):
             print("⚠️ Missing FilePath for latest PDF")
             return None
 
-        date_str = datetime.now().strftime("%Y-%m-%d")
-        pdf_name = f"posoco_psp_report_{date_str}.pdf"
+        # --- FIX STARTS HERE ---
+
+        # 1. Calculate yesterday's date
+        yesterday = datetime.now() - timedelta(days=1)
+        
+        # 2. Format yesterday's date into a string
+        date_str = yesterday.strftime("%Y-%m-%d")
+
+        # 3. Use this correct date for the PDF filename
+        pdf_name = f"daily{date_str}.pdf"
+
+        # --- FIX ENDS HERE ---
+        
         local_path = os.path.join(report_dir, pdf_name)
 
         download_url = base_url.rstrip("/") + "/" + file_path.lstrip("/")
@@ -70,9 +81,12 @@ def fetch_latest_pdf(api_url, base_url, payload, report_dir, timestamp):
         print(f"❌ An error occurred during download: {e}")
         return None
 
-
+# --- THIS FUNCTION HAS BEEN UPDATED ---
 def extract_tables_from_pdf(pdf_file, report_dir, timestamp):
-    """Extracts tables, renames headings, and saves as JSON."""
+    """
+    Extracts tables, renames headings, and saves as JSON.
+    This version dynamically finds tables based on their content, not their position.
+    """
     # Dictionary to map long original names to short, clean names
     KEY_MAPPING = {
         # Table A keys
@@ -95,82 +109,76 @@ def extract_tables_from_pdf(pdf_file, report_dir, timestamp):
         "Total": "total"
     }
 
-    tables = tabula.read_pdf(pdf_file, pages="all", multiple_tables=True, lattice=True)
-    # print(f"[DEBUG] Number of tables extracted: {len(tables)}")
-    # for idx, table in enumerate(tables):
-    #     print(f"[DEBUG] Table {idx} columns: {list(table.columns) if hasattr(table, 'columns') else 'N/A'}")
-    #     print(f"[DEBUG] Table {idx} head:\n{table.head() if hasattr(table, 'head') else table}")
+    try:
+        tables = tabula.read_pdf(pdf_file, pages="all", multiple_tables=True, lattice=True)
+    except Exception as e:
+        print(f"❌ Error reading PDF with Tabula: {e}")
+        tables = []
+
     final_json = {"POSOCO": {"posoco_table_a": [], "posoco_table_g": []}}
 
-    # Process Table A (now using the 1st table found)
-    if len(tables) > 0 and not tables[0].empty:
-        df1 = tables[0].dropna(how="all").reset_index(drop=True)
+    # Initialize variables to hold the found tables
+    table_a_df = None
+    table_g_df = None
+
+    # Loop through all extracted tables to find the ones we need
+    for df in tables:
+        # Skip empty or invalid dataframes
+        if df.empty or len(df.columns) == 0:
+            continue
+
+        # Convert the first column to string type for reliable searching
+        first_col_str = df.iloc[:, 0].astype(str)
+
+        # Identify Table A by looking for a unique phrase in its first column
+        if any("Demand Met during Evening Peak" in s for s in first_col_str):
+            print("✅ Found Table A by its content.")
+            table_a_df = df
+
+        # Identify Table G by looking for "Coal", a unique keyword for the fuel table
+        elif any("Coal" in s for s in first_col_str):
+            print("✅ Found Table G by its content.")
+            table_g_df = df
+
+        # If we have found both tables, we can stop searching
+        if table_a_df is not None and table_g_df is not None:
+            break
+
+    # Process Table A if it was found
+    if table_a_df is not None:
+        df1 = table_a_df.dropna(how="all").reset_index(drop=True)
         table_a_dict = {}
         for _, row in df1.iterrows():
             row_dict = row.to_dict()
             original_key = row_dict.pop("Unnamed: 0", None)
             if original_key:
-                # Clean up the key by removing newline/carriage return characters
-                clean_key = ' '.join(original_key.replace('\r', ' ').split())
-                # Use the mapping to get the short name, fall back to original if not found
+                clean_key = ' '.join(str(original_key).replace('\r', ' ').split())
                 short_key = KEY_MAPPING.get(clean_key, clean_key)
                 table_a_dict[short_key] = row_dict
         final_json["POSOCO"]["posoco_table_a"].append(table_a_dict)
 
-    # Process Table G (now using the 7th table found)
-    if len(tables) > 6 and not tables[6].empty:
-        df7 = tables[6].dropna(how="all").reset_index(drop=True)
+    # Process Table G if it was found
+    if table_g_df is not None:
+        df7 = table_g_df.dropna(how="all").reset_index(drop=True)
         table_g_dict = {}
         for _, row in df7.iterrows():
             row_dict = row.to_dict()
             original_key = row_dict.pop("Unnamed: 0", None)
             if original_key:
-                clean_key = original_key.strip()
+                clean_key = str(original_key).strip()
                 short_key = KEY_MAPPING.get(clean_key, clean_key)
                 table_g_dict[short_key] = row_dict
         final_json["POSOCO"]["posoco_table_g"].append(table_g_dict)
 
-    # Check if both tables are empty or only contain empty dicts
-    is_table_a_empty = (
-        not final_json["POSOCO"]["posoco_table_a"] or
-        all(not bool(d) for d in final_json["POSOCO"]["posoco_table_a"])
-    )
-    is_table_g_empty = (
-        not final_json["POSOCO"]["posoco_table_g"] or
-        all(not bool(d) for d in final_json["POSOCO"]["posoco_table_g"])
-    )
-
-    if is_table_a_empty and is_table_g_empty:
-        # Use the empty template if no real data was extracted
+    # Check if BOTH tables were not found, and if so, use the empty template.
+    if table_a_df is None and table_g_df is None:
         final_json = {
             "POSOCO": {
-                "posoco_table_a": [
-                    {
-                        "demand_evening_peak": None,
-                        "peak_shortage": None,
-                        "energy": None,
-                        "hydro": None,
-                        "wind": None,
-                        "solar": None,
-                        "energy_shortage": None,
-                        "max_demand_day": None,
-                        "time_of_max_demand": None
-                    }
-                ],
-                "posoco_table_g": [
-                    {
-                        "coal": None,
-                        "lignite": None,
-                        "hydro": None,
-                        "nuclear": None,
-                        "gas_naptha_diesel": None,
-                        "res_total": None,
-                        "total": None
-                    }
-                ]
+                "posoco_table_a": [{"demand_evening_peak": None, "peak_shortage": None, "energy": None, "hydro": None, "wind": None, "solar": None, "energy_shortage": None, "max_demand_day": None, "time_of_max_demand": None}],
+                "posoco_table_g": [{"coal": None, "lignite": None, "hydro": None, "nuclear": None, "gas_naptha_diesel": None, "res_total": None, "total": None}]
             }
         }
-        print("⚠️ No real data extracted from POSOCO PDF. Using empty template.")
+        print("⚠️ No valid tables found in PDF. Using empty template.")
 
     # Save the final JSON to a file
     date_str = datetime.now().strftime("%Y-%m-%d")
@@ -181,44 +189,41 @@ def extract_tables_from_pdf(pdf_file, report_dir, timestamp):
         json.dump(final_json, f, indent=4, ensure_ascii=False)
 
     print(f"✅ JSON with shortened keys saved successfully at: {output_json}")
-    
+
     return final_json
 
 
 def save_to_db(final_json):
     """Saves the processed JSON data to the Django database."""
     today = datetime.now().date()
-    
+
     try:
         # Save data from Table A
-        for row_dict in final_json["POSOCO"]["posoco_table_a"]:
-            for category, values in row_dict.items():
-                if values is None:
+        table_a_data = final_json.get("POSOCO", {}).get("posoco_table_a", [])
+        if table_a_data and table_a_data[0]:
+            for category, values in table_a_data[0].items():
+                if values is None or not isinstance(values, dict):
                     continue
-                if not isinstance(values, dict):
-                    continue
-                # Skip if all values are None
                 if all(v is None for v in values.values()):
                     continue
                 PosocoTableA.objects.update_or_create(
                     category=category,
                     report_date=today,
                     defaults={
-                        'nr': values.get("NR") if values else None,
-                        'wr': values.get("WR") if values else None,
-                        'sr': values.get("SR") if values else None,
-                        'er': values.get("ER") if values else None,
-                        'ner': values.get("NER") if values else None,
-                        'total': values.get("TOTAL") if values else None,
+                        'nr': values.get("NR"),
+                        'wr': values.get("WR"),
+                        'sr': values.get("SR"),
+                        'er': values.get("ER"),
+                        'ner': values.get("NER"),
+                        'total': values.get("TOTAL"),
                     }
                 )
 
         # Save data from Table G
-        for row_dict in final_json["POSOCO"]["posoco_table_g"]:
-            for fuel, values in row_dict.items():
-                if values is None:
-                    continue
-                if not isinstance(values, dict):
+        table_g_data = final_json.get("POSOCO", {}).get("posoco_table_g", [])
+        if table_g_data and table_g_data[0]:
+            for fuel, values in table_g_data[0].items():
+                if values is None or not isinstance(values, dict):
                     continue
                 if all(v is None for v in values.values()):
                     continue
@@ -226,18 +231,19 @@ def save_to_db(final_json):
                     fuel_type=fuel,
                     report_date=today,
                     defaults={
-                        'nr': values.get("NR") if values else None,
-                        'wr': values.get("WR") if values else None,
-                        'sr': values.get("SR") if values else None,
-                        'er': values.get("ER") if values else None,
-                        'ner': values.get("NER") if values else None,
-                        'all_india': values.get("All India") if values else None,
-                        'share_percent': values.get("% Share") if values else None,
+                        'nr': values.get("NR"),
+                        'wr': values.get("WR"),
+                        'sr': values.get("SR"),
+                        'er': values.get("ER"),
+                        'ner': values.get("NER"),
+                        'all_india': values.get("All India"),
+                        'share_percent': values.get("% Share"),
                     }
                 )
         print("✅ Data saved to database successfully")
     except Exception as e:
         print(f"❌ An error occurred while saving to the database: {e}")
+
 
 # --- Django Management Command ---
 class Command(BaseCommand):
@@ -247,7 +253,7 @@ class Command(BaseCommand):
         self.stdout.write("🚀 Starting POSOCO report download and processing...")
         report_dir, timestamp = make_report_dir(SAVE_DIR)
         pdf_path = fetch_latest_pdf(API_URL, BASE_URL, payload, report_dir, timestamp)
-        
+
         if pdf_path:
             final_json = extract_tables_from_pdf(pdf_path, report_dir, timestamp)
             if final_json and (final_json["POSOCO"]["posoco_table_a"] or final_json["POSOCO"]["posoco_table_g"]):
@@ -256,5 +262,5 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING("Could not extract any data from the PDF to save."))
         else:
             self.stdout.write(self.style.ERROR("Failed to download PDF. Aborting process."))
-        
+
         self.stdout.write(self.style.SUCCESS("✅ Process finished."))

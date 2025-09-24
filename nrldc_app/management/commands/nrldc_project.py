@@ -4,13 +4,8 @@ import os
 import pandas as pd
 import json
 import logging
-
-
 from django.core.management.base import BaseCommand, CommandError
 from nrldc_app.models import Nrldc2AData, Nrldc2CData
-
-
-# Explicit import of read_pdf to avoid attribute error with tabula-py >=1.0.0
 from tabula.io import read_pdf
 
 

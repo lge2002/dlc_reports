@@ -354,7 +354,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("⚠️ No tables were successfully extracted to create a combined JSON file."))
 
     def download_latest_pdf(self, new_base_url, base_download_dir="downloads"):
-        project_name = "WRLDC"  # Added project name here
+        project_name = "WRLDC"
         base_download_dir = os.path.join(base_download_dir, project_name)
         os.makedirs(base_download_dir, exist_ok=True)
         
@@ -362,6 +362,11 @@ class Command(BaseCommand):
         report_date = None
         report_dir = None
 
+        # --- Calculate yesterday's date for PDF naming ---
+        yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+        pdf_name = f"daily{yesterday.strftime('%y%m%d')}"
+        local_pdf_filename = f"{pdf_name}.pdf"
+        
         today = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
         dates_to_try = [today, today - datetime.timedelta(days=1)]
 
@@ -374,19 +379,19 @@ class Command(BaseCommand):
             file_name_on_server = f"WRLDC_PSP_Report_{day:02d}-{current_date.month:02d}-{year}.pdf"
 
             full_url = f"{new_base_url}{directory_path_on_server}{file_name_on_server}"
-            # Use current date and time for the directory name
+            
             now_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
             report_dir = os.path.join(base_download_dir, f"report_{now_str}")
             os.makedirs(report_dir, exist_ok=True)
             self.stdout.write(f"📁 Checking/Created report directory: {report_dir}")
 
-            local_pdf_filename = file_name_on_server
+            # --- Use the consistent local filename based on yesterday
             local_file_path = os.path.join(report_dir, local_pdf_filename)
 
             if os.path.exists(local_file_path):
-                self.stdout.write(self.style.NOTICE(f"📄 PDF already exists locally for {current_date.strftime('%d-%m-%Y')} at {local_file_path}. Skipping download."))
+                self.stdout.write(self.style.NOTICE(f"📄 PDF already exists locally for {yesterday.strftime('%d-%m-%Y')} at {local_file_path}. Skipping download."))
                 pdf_path = local_file_path
-                report_date = current_date.date()
+                report_date = yesterday.date() # Return yesterday's date
                 return pdf_path, report_date, report_dir
 
             self.stdout.write(f"🌐 Attempting to download from: {full_url}")
@@ -401,10 +406,11 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"✅ Successfully downloaded: {local_pdf_filename} to {report_dir}"))
                 logging.info(f"Successfully downloaded: {local_file_path} to {report_dir}")
                 pdf_path = local_file_path
-                report_date = current_date.date()
+                report_date = yesterday.date() # Return yesterday's date
                 return pdf_path, report_date, report_dir
 
             except requests.exceptions.HTTPError as e:
+                # ... (rest of the function is the same)
                 if e.response.status_code == 404:
                     self.stdout.write(self.style.WARNING(f"⚠️ File not found for {current_date.strftime('%d-%m-%Y')} at {full_url}. Trying next date if available."))
                     logging.warning(f"File not found for {current_date.strftime('%d-%m-%Y')} at {full_url}. Trying next date if available.")
@@ -420,18 +426,26 @@ class Command(BaseCommand):
         self.stdout.write(self.style.ERROR("❌ Failed to download the latest report after trying all attempts."))
         logging.error("Failed to download the latest report after trying all attempts.")
         return None, None, None
-
+    
     def handle(self, *args, **options):
         if "JAVA_HOME" not in os.environ:
             self.stdout.write(self.style.WARNING("JAVA_HOME environment variable not set. tabula-py may fail."))
 
         new_url = "https://reporting.wrldc.in:8081/PSP/"
 
-        pdf_path, report_date, report_output_dir = self.download_latest_pdf(new_url)
+        # The download function correctly finds yesterday's report and returns yesterday's date.
+        # We will keep this logic as is.
+        pdf_path, report_content_date, report_output_dir = self.download_latest_pdf(new_url)
 
         if pdf_path is None:
             self.stdout.write(self.style.WARNING("No PDF report was successfully downloaded or found locally. Exiting."))
             return
+            
+        # --- CHANGE IMPLEMENTED HERE ---
+        # Set report_date to today's date only
+        report_date = datetime.datetime.now().date() 
 
+        # We pass the NEW date (`db_save_date`) to the function that saves to the database.
         self.extract_tables_from_pdf(pdf_path, report_output_dir, report_date)
-        self.stdout.write(self.style.SUCCESS(f"Finished processing. Files saved in: {report_output_dir}")) 
+        
+        self.stdout.write(self.style.SUCCESS(f"Finished processing. Files saved in: {report_output_dir}"))

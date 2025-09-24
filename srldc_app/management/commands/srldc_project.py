@@ -55,9 +55,9 @@ class Command(BaseCommand):
             df (pd.DataFrame): The DataFrame to search within.
             start_marker (str): The regex pattern to identify the start of the sub-table (usually the table title).
             end_marker (str, optional): The regex pattern to identify the end of the sub-table.
-                                            If None, extracts from start_marker to the end of the DataFrame.
+                                        If None, extracts from start_marker to the end of the DataFrame.
             header_row_count (int): The number of rows immediately following the start_marker (or actual data start)
-                                        that constitute the header. These rows will be combined to form column names.
+                                    that constitute the header. These rows will be combined to form column names.
             debug_table_name (str): A name for the table being processed, used in debug prints.
 
 
@@ -197,22 +197,6 @@ class Command(BaseCommand):
 
 
     def extract_tables_from_pdf(self, pdf_path, output_dir, report_date):
-        def extract_tables_from_pdf(self, pdf_path, output_dir, report_date):
-            self.write("🔍 Extracting tables from PDF...")
-            try:
-                tables = read_pdf(
-                    pdf_path,
-                    pages='all',
-                    multiple_tables=True,
-                    pandas_options={'header': None},
-                    lattice=True
-                )
-            except Exception as e:
-                raise CommandError(f"❌ Tabula extraction failed: {e}")
-            if not tables:
-                raise CommandError("❌ No tables found in the PDF.")
-            self.write(self.style.SUCCESS(f"✅ Found {len(tables)} tables."))
-            # ...rest of your method code, all indented inside this method...
         self.logger.info("🔍 Extracting tables from PDF...")
 
 
@@ -277,11 +261,11 @@ class Command(BaseCommand):
                 normalized_states = [s.strip().upper() for s in self.SOUTH_INDIAN_STATES]
                 sub_2A_filtered = sub_2A_renamed[
                     sub_2A_renamed['state'].astype(str)
-                                                .str.strip()
-                                                .str.upper()
-                                                .str.replace(r'\s+', ' ', regex=True)
-                                                .str.replace('–', '-', regex=False)
-                                                .isin(normalized_states)
+                                         .str.strip()
+                                         .str.upper()
+                                         .str.replace(r'\s+', ' ', regex=True)
+                                         .str.replace('–', '-', regex=False)
+                                         .isin(normalized_states)
                 ].copy()
 
 
@@ -289,9 +273,9 @@ class Command(BaseCommand):
                     self.write(self.style.WARNING("⚠️ Exact state name matching failed for Table 2A. Attempting a more lenient match."), level='warning')
                     sub_2A_filtered = sub_2A_renamed[
                         sub_2A_renamed['state'].astype(str)
-                                                    .str.strip()
-                                                    .str.upper()
-                                                    .str.contains('ANDHRA PRADESH|KARNATAKA|KERALA|PONDICHERRY|TAMILNADU|TELANGANA|REGION', case=False, na=False)
+                                             .str.strip()
+                                             .str.upper()
+                                             .str.contains('ANDHRA PRADESH|KARNATAKA|KERALA|PONDICHERRY|TAMILNADU|TELANGANA|REGION', case=False, na=False)
                     ].copy()
                 self.write(f"States found for Table 2A after filtering: {sub_2A_filtered['state'].tolist()}")
                 self.logger.info(f"States found for Table 2A after filtering: {sub_2A_filtered['state'].tolist()}")
@@ -387,8 +371,8 @@ class Command(BaseCommand):
                 'Time.1': 'time_max_req',
                 'Shortage during maximum requirement': 'shortage_max_req',
                 'Maximum requirement of the day': 'max_req_day',
-                'Min Demand Met': 'ace_min',       # Corrected mapping
-                'Time.2': 'time_ace_min',           # Corrected mapping
+                'Min Demand Met': 'ace_min',      # Corrected mapping
+                'Time.2': 'time_ace_min',         # Corrected mapping
                 'ACE_MAX': 'ace_max',
                 'Time.3': 'time_ace_max',
                 # Removed ACE_MIN and Time.4 from mapping, do not exist in extracted data
@@ -400,11 +384,11 @@ class Command(BaseCommand):
                 normalized_states_2C = [s.strip().upper() for s in self.SOUTH_INDIAN_STATES_2C]
                 sub_2C_filtered = sub_2C_renamed[
                     sub_2C_renamed['state'].astype(str)
-                                                    .str.strip()
-                                                    .str.upper()
-                                                    .str.replace(r'\s+', ' ', regex=True)
-                                                    .str.replace('–', '-', regex=False)
-                                                    .isin(normalized_states_2C)
+                                         .str.strip()
+                                         .str.upper()
+                                         .str.replace(r'\s+', ' ', regex=True)
+                                         .str.replace('–', '-', regex=False)
+                                         .isin(normalized_states_2C)
                 ].copy()
 
 
@@ -412,9 +396,9 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.WARNING("⚠️ Exact state name matching failed for Table 2C. Attempting a more lenient match."))
                     sub_2C_filtered = sub_2C_renamed[
                         sub_2C_renamed['state'].astype(str)
-                                                    .str.strip()
-                                                    .str.upper()
-                                                    .str.contains('AP|KAR|KER|PONDY|TN|TG|REGION', case=False, na=False)
+                                             .str.strip()
+                                             .str.upper()
+                                             .str.contains('AP|KAR|KER|PONDY|TN|TG|REGION', case=False, na=False)
                     ].copy()
                 self.stdout.write(f"States found for Table 2C after filtering: {sub_2C_filtered['state'].tolist()}")
                 self.logger.info(f"States found for Table 2C after filtering: {sub_2C_filtered['state'].tolist()}")
@@ -497,9 +481,9 @@ class Command(BaseCommand):
 
 
         if combined_json_data:
-            # Always use today's date for the filename
-            today_str = datetime.date.today().strftime('%Y-%m-%d')
-            combined_json_path = os.path.join(output_dir, f'srdc_report_tables_{today_str}.json')
+            # <<< CHANGE: Use the actual report_date for the filename, not today's date.
+            report_date_str = report_date.strftime('%Y-%m-%d')
+            combined_json_path = os.path.join(output_dir, f'srdc_report_tables_{report_date_str}.json')
             with open(combined_json_path, 'w', encoding='utf-8') as f:
                 json.dump(combined_json_data, f, indent=4, ensure_ascii=False)
             self.stdout.write(self.style.SUCCESS(f"✅ Combined tables saved to: {combined_json_path}"))
@@ -593,14 +577,13 @@ class Command(BaseCommand):
             self.logger.warning("JAVA_HOME environment variable not set. tabula-py may fail.")
 
 
-        pdf_path, report_date, report_output_dir = self.download_latest_srldc_pdf()
-
+        pdf_path, _, report_output_dir = self.download_latest_srldc_pdf()
+        report_date = datetime.datetime.now().date()
 
         if pdf_path is None:
             self.stdout.write(self.style.WARNING("No PDF report was successfully downloaded or found locally. Exiting."))
             self.logger.warning("No PDF report was successfully downloaded or found locally. Exiting.")
             return
-
 
         self.extract_tables_from_pdf(pdf_path, report_output_dir, report_date)
         self.stdout.write(self.style.SUCCESS(f"Finished processing. Files saved in: {report_output_dir}"))
