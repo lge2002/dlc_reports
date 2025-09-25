@@ -55,12 +55,8 @@ def fetch_latest_pdf(api_url, base_url, payload, report_dir, timestamp):
 
         # 1. Calculate yesterday's date
         yesterday = datetime.now() - timedelta(days=1)
-        
-        # 2. Format yesterday's date into a string
-        date_str = yesterday.strftime("%Y-%m-%d")
-
-        # 3. Use this correct date for the PDF filename
-        pdf_name = f"daily{date_str}.pdf"
+        # 2. Format as 'dailyDDMMYY.pdf'
+        pdf_name = f"daily{yesterday.strftime('%d%m%y')}.pdf"
 
         # --- FIX ENDS HERE ---
         

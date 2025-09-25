@@ -774,3 +774,36 @@
 2025-09-24 12:51:27,323 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-24 - NR[0m
 2025-09-24 12:51:27,323 - INFO - [32;1m✅ Table 2(C) data saved to database.[0m
 2025-09-24 12:51:27,326 - INFO - [32;1m✅ Combined tables saved to: downloads\NRLDC\report_2025-09-24_12-51-23\nrdc_report_tables.json[0m
+2025-09-25 09:44:42,289 - INFO - 🌐 Fetching NRDC report metadata for 2025-09-25...
+2025-09-25 09:44:43,640 - INFO - 📁 Created output directory: downloads\NRLDC\report_2025-09-25_09-44-43
+2025-09-25 09:44:43,640 - INFO - ⬇️ Attempting to download PDF to: downloads\NRLDC\report_2025-09-25_09-44-43\daily240925.pdf
+2025-09-25 09:44:44,604 - INFO - [32;1m✅ Downloaded report to: downloads\NRLDC\report_2025-09-25_09-44-43\daily240925.pdf[0m
+2025-09-25 09:44:44,604 - INFO - 🔍 Extracting tables from PDF...
+2025-09-25 09:44:48,053 - INFO - [32;1m✅ Found 17 tables.[0m
+2025-09-25 09:44:48,101 - INFO - [32;1m✅ Table 2(A) extracted for combined JSON.[0m
+2025-09-25 09:44:48,129 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - PUNJAB[0m
+2025-09-25 09:44:48,129 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - HARYANA[0m
+2025-09-25 09:44:48,129 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - RAJASTHAN[0m
+2025-09-25 09:44:48,141 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - DELHI[0m
+2025-09-25 09:44:48,144 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - UTTAR PRADESH[0m
+2025-09-25 09:44:48,144 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - UTTARAKHAND[0m
+2025-09-25 09:44:48,151 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - HIMACHALPRADESH[0m
+2025-09-25 09:44:48,165 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - J&K(UT) &Ladakh(UT)[0m
+2025-09-25 09:44:48,172 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - CHANDIGARH[0m
+2025-09-25 09:44:48,175 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - RAILWAYS_NR ISTS[0m
+2025-09-25 09:44:48,180 - INFO - [32;1m➕ Created Table 2A entry for 2025-09-25 - Region[0m
+2025-09-25 09:44:48,180 - INFO - [32;1m✅ Table 2(A) data saved to database.[0m
+2025-09-25 09:44:48,194 - INFO - [32;1m✅ Table 2(C) extracted for combined JSON.[0m
+2025-09-25 09:44:48,241 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - PUNJAB[0m
+2025-09-25 09:44:48,241 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - HARYANA[0m
+2025-09-25 09:44:48,241 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - RAJASTHAN[0m
+2025-09-25 09:44:48,254 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - DELHI[0m
+2025-09-25 09:44:48,261 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - UP[0m
+2025-09-25 09:44:48,265 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - UTTARAKHA..[0m
+2025-09-25 09:44:48,269 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - HP[0m
+2025-09-25 09:44:48,274 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - J&K(UT)&Lad..[0m
+2025-09-25 09:44:48,278 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - CHANDIGARH[0m
+2025-09-25 09:44:48,282 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - RAILWAYS_NRISTS[0m
+2025-09-25 09:44:48,286 - INFO - [32;1m➕ Created Table 2C entry for 2025-09-25 - NR[0m
+2025-09-25 09:44:48,286 - INFO - [32;1m✅ Table 2(C) data saved to database.[0m
+2025-09-25 09:44:48,288 - INFO - [32;1m✅ Combined tables saved to: downloads\NRLDC\report_2025-09-25_09-44-43\nrdc_report_tables.json[0m

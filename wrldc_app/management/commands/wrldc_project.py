@@ -364,8 +364,8 @@ class Command(BaseCommand):
 
         # --- Calculate yesterday's date for PDF naming ---
         yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-        pdf_name = f"daily{yesterday.strftime('%y%m%d')}"
-        local_pdf_filename = f"{pdf_name}.pdf"
+        pdf_name = f"daily{yesterday.strftime('%d%m%y')}"
+        local_pdf_filename = f"{pdf_name}.pdf" 
         
         today = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
         dates_to_try = [today, today - datetime.timedelta(days=1)]
