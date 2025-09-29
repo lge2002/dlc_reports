@@ -37,47 +37,48 @@ report_dirs = {
 empty_templates = {
     'NRLDC': {
         "date": None,
-        "nrldc_table_2A": [{
-            "state": None, "thermal": None, "hydro": None, "gas_naptha_diesel": None,
-            "solar": None, "wind": None, "other_biomass_co_gen_etc": None, "total": None,
-            "drawal_sch": None, "act_drawal": None, "ui": None, "requirement": None,
-            "shortage": None, "consumption": None
-        }],
-        "nrldc_table_2C": [{
-            "state": None, "max_demand": None, "time_max": None, "shortage_during": None,
-            "req_max_demand": None, "max_req_day": None, "time_max_req": None,
-            "shortage_max_req": None, "demand_met_max_req": None, "min_demand_met": None,
-            "time_min_demand": None, "ace_max": None, "time_ace_max": None, "ace_min": None,
-            "time_ace_min": None
-        }]
+        "nrldc_table_2A": [
+            {"state": s["state"], "thermal": None, "hydro": None, "gas_naptha_diesel": None, "solar": None, "wind": None, "other_biomass": None, "total": None, "drawal_sch": None, "act_drawal": None, "ui": None, "requirement": None, "shortage": None, "consumption": None}
+            for s in [
+                {"state": "PUNJAB"}, {"state": "HARYANA"}, {"state": "RAJASTHAN"}, {"state": "DELHI"}, {"state": "UTTAR PRADESH"}, {"state": "UTTARAKHAND"}, {"state": "HIMACHAL\rPRADESH"}, {"state": "J&K(UT) &\rLadakh(UT)"}, {"state": "CHANDIGARH"}, {"state": "RAILWAYS_NR ISTS"}, {"state": "Region"}
+            ]
+        ],
+        "nrldc_table_2C": [
+            {"state": s["state"], "max_demand": None, "time_max": None, "shortage_during": None, "req_max_demand": None, "max_req_day": None, "time_max_req": None, "shortage_max_req": None, "demand_met_max_req": None, "min_demand_met": None, "time_min_demand": None, "ace_max": None, "time_ace_max": None, "ace_min": None, "time_ace_min": None}
+            for s in [
+                {"state": "PUNJAB"}, {"state": "HARYANA"}, {"state": "RAJASTHAN"}, {"state": "DELHI"}, {"state": "UP"}, {"state": "UTTARAKHA.."}, {"state": "HP"}, {"state": "J&K(UT)&Lad.."}, {"state": "CHANDIGARH"}, {"state": "RAILWAYS_NR\rISTS"}, {"state": "NR"}
+            ]
+        ]
     },
     'SRLDC': {
         "date": None,
-        "srldc_table_2A": [{
-            "state": None, "thermal": None, "hydro": None, "gas_naptha_diesel": None,
-            "solar": None, "wind": None, "others": None, "net_sch": None, "drawal": None,
-            "ui": None, "availability": None, "demand_met": None, "shortage": None
-        }],
-        "srldc_table_2C": [{
-            "state": None, "max_demand": None, "time": None, "shortage_max_demand": None,
-            "req_max_demand": None, "demand_max_req": None, "time_max_req": None,
-            "shortage_max_req": None, "max_req_day": None, "ace_min": None,
-            "time_ace_min": None, "ace_max": None, "time_ace_max": None
-        }]
+        "srldc_table_2A": [
+            {"state": s["state"], "thermal": None, "hydro": None, "gas_naptha_diesel": None, "solar": None, "wind": None, "others": None, "net_sch": None, "drawal": None, "ui": None, "availability": None, "demand_met": None, "shortage": None}
+            for s in [
+                {"state": "ANDHRA\rPRADESH"}, {"state": "KARNATAKA"}, {"state": "KERALA"}, {"state": "PONDICHERRY"}, {"state": "TAMILNADU"}, {"state": "TELANGANA"}, {"state": "Region"}
+            ]
+        ],
+        "srldc_table_2C": [
+            {"state": s["state"], "max_demand": None, "time": None, "shortage_max_demand": None, "req_max_demand": None, "demand_max_req": None, "time_max_req": None, "shortage_max_req": None, "max_req_day": None, "ace_min": None, "time_ace_min": None, "ace_max": None, "time_ace_max": None}
+            for s in [
+                {"state": "AP"}, {"state": "KAR"}, {"state": "KER"}, {"state": "PONDY"}, {"state": "TN"}, {"state": "TG"}, {"state": "Region"}
+            ]
+        ]
     },
     'WRLDC': {
         "date": None,
-        "wrldc_table_2A": [{
-            "state": None, "thermal": None, "hydro": None, "gas": None, "wind": None,
-            "solar": None, "others": None, "total": None, "net_sch": None, "drawal": None,
-            "ui": None, "availability": None, "requirement": None, "shortage": None,
-            "consumption": None
-        }],
-        "wrldc_table_2C": [{
-            "state": None, "max_demand_day": None, "time": None, "shortage_max_demand": None,
-            "req_max_demand": None, "ace_max": None, "time_ace_max": None, "ace_min": None,
-            "time_ace_min": None
-        }]
+        "wrldc_table_2A": [
+            {"state": s["state"], "thermal": None, "hydro": None, "gas": None, "wind": None, "solar": None, "others": None, "total": None, "net_sch": None, "drawal": None, "ui": None, "availability": None, "requirement": None, "shortage": None, "consumption": None}
+            for s in [
+                {"state": "BALCO"}, {"state": "CHHATTISGARH"}, {"state": "DNHDDPDCL"}, {"state": "AMNSIL"}, {"state": "GOA"}, {"state": "GUJARAT"}, {"state": "MAHARASHTRA"}, {"state": "RIL JAMNAGAR"}, {"state": "Region"}
+            ]
+        ],
+        "wrldc_table_2C": [
+            {"state": s["state"], "max_demand_day": None, "time": None, "shortage_max_demand": None, "req_max_demand": None, "ace_max": None, "time_ace_max": None, "ace_min": None, "time_ace_min": None}
+            for s in [
+                {"state": "AMNSIL"}, {"state": "BALCO"}, {"state": "CHHATTISGARH"}, {"state": "DNHDDPDCL"}, {"state": "GOA"}, {"state": "GUJARAT"}, {"state": "MAHARASHTRA"}, {"state": "RIL JAMNAGAR"}, {"state": "WR"}
+            ]
+        ]
     },
     "POSOCO": {
         "date": None,
@@ -93,64 +94,65 @@ empty_templates = {
     }
 }
 
-# Always use yesterday's date for API URL and pushed data
-pdf_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+
+# Use yesterday's date for API URL and pushed data
+yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 BASE_API_URL = "http://172.16.7.118:8003/api/tamilnadu/wind/api.grid.php"
-api_url_with_date = f"{BASE_API_URL}?date={pdf_date}"
+api_url_with_date = f"{BASE_API_URL}?date={yesterday_date}"
 
 merged_data = {}
 
+# Pick JSON files from current date
+today_str = datetime.now().strftime('%Y-%m-%d')
 for region, report_dir in report_dirs.items():
     region_data = None
     try:
         # List all subdirectories
         all_subdirs = [d for d in os.listdir(report_dir) if os.path.isdir(os.path.join(report_dir, d))]
-        # Extract date from subdir name
-        subdir_dates = []
+        # Find subdir with today's date
+        today_subdir = None
         for d in all_subdirs:
-            match = re.search(r'(\d{4})-(\d{2})-(\d{2})', d)
-            if match:
-                subdir_date = datetime(int(match.group(1)), int(match.group(2)), int(match.group(3))).date()
-                subdir_dates.append((subdir_date, d))
-        # Pick the latest subdir
-        if subdir_dates:
-            latest_subdir_date, latest_subdir = sorted(subdir_dates, reverse=True)[0]
-            full_subdir = os.path.join(report_dir, latest_subdir)
+            if today_str in d:
+                today_subdir = d
+                break
+        if today_subdir:
+            full_subdir = os.path.join(report_dir, today_subdir)
             json_files = glob(os.path.join(full_subdir, '*.json'))
             json_file_name = None
             if json_files:
+                # Pick the newest JSON file in today's subdir
                 json_file_name = sorted(json_files, key=os.path.getmtime, reverse=True)[0]
             if not json_file_name:
-                print(f"No JSON files found in {full_subdir} for {region}")
+                print(f"No JSON files found in {full_subdir} for {region}, using empty template.")
                 region_data = empty_templates.get(region, {})
             else:
                 try:
                     with open(json_file_name, 'r', encoding='utf-8') as f:
                         data = json.load(f)
                         inner_data = data.get(region, data)
-                        # Always set date to yesterday
-                        yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-                        restructured_data = {'date': yesterday, **inner_data}
+                        # Always set date to today for merged data
+                        restructured_data = {'date': today_str, **inner_data}
                         template = empty_templates.get(region, {})
                         for table_key, template_value in template.items():
                             if table_key == 'date':
                                 continue
                             table_content = restructured_data.get(table_key)
                             if not table_content or not any(table_content):
-                                print(f"⚠️ Missing or empty table '{table_key}' for {region}. Applying template.")
+                                print(f"⚠️ Missing or empty table '{table_key}' for {region}, applying empty template.")
                                 restructured_data[table_key] = template_value
                         region_data = restructured_data
+                        print(f"✅ Merged data for {region} from {json_file_name}")
                 except Exception as e:
-                    print(f"Error reading or validating {json_file_name}: {e}")
+                    print(f"Error reading or validating {json_file_name} for {region}: {e}, using empty template.")
                     region_data = empty_templates.get(region, {})
         else:
-            print(f"No valid subdirs for {region}")
+            print(f"No subdir for today ({today_str}) in {report_dir} for {region}, using empty template.")
             region_data = empty_templates.get(region, {})
     except (FileNotFoundError, NotADirectoryError):
-        print(f"Directory not found or is not a directory: {report_dir}")
+        print(f"Directory not found or is not a directory: {report_dir}, using empty template.")
         region_data = empty_templates.get(region, {})
     # Always set date to yesterday for merged data
-    region_data['date'] = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    region_data['date'] = yesterday_date
     merged_data[region] = region_data
 
 headers = {
@@ -181,4 +183,4 @@ if save_locally:
     output_path = os.path.join(output_dir, f'merged_reports_{timestamp}.json')
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(merged_data, f, indent=2, ensure_ascii=False)
-    print(f"\nMerged latest reports for {pdf_date} saved to {output_path}")
+    print(f"\nMerged latest reports for {yesterday_date} saved to {output_path}")

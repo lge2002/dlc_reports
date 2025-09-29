@@ -320,9 +320,9 @@ class Command(BaseCommand):
             self.write(self.style.WARNING("⚠️ Table 2(C) not found or extraction failed."), level='warning')
 
         if combined_json_data:
-            # Save JSON file with yesterday's date in 'nrldc_DDMMYYYY.json' format
-            yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-            json_name = f"nrldc_{yesterday.strftime('%d%m%Y')}.json"
+            # Save JSON file with current date in 'nrldc_DDMMYYYY.json' format
+            today = datetime.datetime.now()
+            json_name = f"nrldc_{today.strftime('%d%m%Y')}.json"
             json_path = os.path.join(output_dir, json_name)
             with open(json_path, 'w', encoding='utf-8') as f:
                 json.dump(combined_json_data, f, indent=4, ensure_ascii=False)
