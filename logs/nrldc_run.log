@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "C:\Users\tamilarasans\Desktop\REPORT\dlc_reports\manage.py", line 22, in <module>
+    main()
+  File "C:\Users\tamilarasans\Desktop\REPORT\dlc_reports\manage.py", line 18, in main
+    execute_from_command_line(sys.argv)
+  File "C:\Users\tamilarasans\AppData\Roaming\Python\Python310\site-packages\django\core\management\__init__.py", line 442, in execute_from_command_line
+    utility.execute()
+  File "C:\Users\tamilarasans\AppData\Roaming\Python\Python310\site-packages\django\core\management\__init__.py", line 436, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+  File "C:\Users\tamilarasans\AppData\Roaming\Python\Python310\site-packages\django\core\management\base.py", line 416, in run_from_argv
+    self.execute(*args, **cmd_options)
+  File "C:\Users\tamilarasans\AppData\Roaming\Python\Python310\site-packages\django\core\management\base.py", line 460, in execute
+    output = self.handle(*args, **options)
+  File "C:\Users\tamilarasans\Desktop\REPORT\dlc_reports\nrldc_app\management\commands\nrldc_project.py", line 248, in handle
+    self.write(f"\u2705 Pass: Report data for {today_str} already exists.", self.style.SUCCESS)
+  File "C:\Users\tamilarasans\Desktop\REPORT\dlc_reports\nrldc_app\management\commands\nrldc_project.py", line 61, in write
+    self.stdout.write(console_message, ending=end)
+  File "C:\Users\tamilarasans\AppData\Roaming\Python\Python310\site-packages\django\core\management\base.py", line 181, in write
+    self._out.write(style_func(msg))
+  File "C:\Program Files\Python310\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 0: character maps to <undefined>

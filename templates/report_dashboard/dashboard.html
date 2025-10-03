@@ -1,220 +1,135 @@
-{% extends "base.html" %}
-
-{% block content %}
-<style>
-    body {
-        background: linear-gradient(to right, #c9d6ff, #e2e2e2);
-        font-family: 'Segoe UI', sans-serif;
-        margin: 0;
-        padding: 0;
-    }
-
-
-    .glass-container {
-        max-width: 1100px;
-        margin: 60px auto;
-        background: rgba(255, 255, 255, 0.25);
-        border-radius: 16px;
-        padding: 30px;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-    }
-
-
-    h1 {
-        text-align: center;
-        color: #333;
-        margin-bottom: 30px;
-    }
-
-
-    .status-logs {
-        display: flex;
-        gap: 20px;
-        justify-content: space-between;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
-    }
-
-
-    .log-box {
-        flex: 1;
-        min-width: 300px;
-        background-color: #1e1e1e;
-        color: #00ff00;
-        padding: 15px;
-        border-radius: 10px;
-        font-family: 'Courier New', Courier, monospace;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        white-space: pre-wrap;
-        overflow-x: auto;
-        max-height: 400px;  /* add max height so it scrolls */
-        overflow-y: auto;
-    }
-
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-
-    thead th {
-        background-color: #6c63ff;
-        color: white;
-        padding: 14px;
-        font-size: 15px;
-        text-transform: uppercase;
-        border-radius: 8px 8px 0 0;
-    }
-
-
-    tbody tr {
-        background-color: rgba(255, 255, 255, 0.7);
-        transition: background-color 0.2s;
-    }
-
-
-    tbody tr:hover {
-        background-color: #f3f3f3;
-    }
-
-
-    td {
-        padding: 12px;
-        text-align: center;
-        border-bottom: 1px solid #ddd;
-        font-size: 14px;
-        color: #333;
-    }
-
-
-    .badge {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-
-    .badge-success {
-        background-color: #d4edda;
-        color: #155724;
-    }
-
-
-    .badge-danger {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-
-
-    .project-name {
-        font-weight: bold;
-        text-transform: capitalize;
-        color: #333;
-    }
-</style>
-
-
-<div class="glass-container">
-    <h1>📘 Report Automation Dashboard</h1>
-
-
-<div class="status-logs">
-    <div class="log-box">
-        <p>{{ log_content.NRLDC|default:"No NRLDC logs available." }}</p>
-    </div>
-    <div class="log-box">
-        <p>{{ log_content.SRLDC|default:"No SRLDC logs available." }}</p>
-    </div>  
-    <div class="log-box">
-        <p>{{ log_content.WRLDC|default:"No WRLDC logs available." }}</p>
-    </div>
-</div>
-
-
-    <table>
-        <thead>
-            <tr>
-                <th>Project</th>
-                <th>Latest Report Date (2A)</th>
-                <th>Records (2A)</th>
-                <th>Latest Report Date (2C)</th>
-                <th>Records (2C)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for project in status %}
-            <tr>
-                <td class="project-name">{{ project.name }}</td>
-                <td>
-                    {% if project.latest_2A_date %}
-                    <span class="badge badge-success">{{ project.latest_2A_date|date:"Y-m-d" }}</span>
-                    {% else %}
-                    <span class="badge badge-danger">No Data</span>
-                    {% endif %}
-                </td>
-                <td>{{ project.count_2A }}</td>
-                <td>
-                    {% if project.latest_2C_date %}
-                    <span class="badge badge-success">{{ project.latest_2C_date|date:"Y-m-d" }}</span>
-                    {% else %}
-                    <span class="badge badge-danger">No Data</span>
-                    {% endif %}
-                </td>
-                <td>{{ project.count_2C }}</td>
-            </tr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automation Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card-header .spinner-border { width: 1.2rem; height: 1.2rem; vertical-align: text-bottom; }
+        pre { font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">Automation Process Dashboard</h1>
+            <div id="last-updated" class="text-muted small"></div>
+        </div>
+        
+        <div class="row" id="dashboard-grid">
+            {% for job in jobs %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card shadow-sm" id="job-{{ job.script_name }}">
+                    <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                        <span class="text-capitalize">{{ job.script_name }}</span>
+                        <span class="badge" data-status-badge>{{ job.get_status_display }}</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text mb-2">
+                            <strong>Today's Data:</strong>
+                            <span data-data-status>
+                                {% if job.is_data_available_today %}
+                                    <i class="bi bi-check-circle-fill text-success"></i> Available
+                                {% else %}
+                                    <i class="bi bi-x-circle-fill text-danger"></i> Missing
+                                {% endif %}
+                            </span>
+                        </p>
+                        <p class="card-text small text-muted mb-1">
+                            <strong>Last Run:</strong> <span data-last-run>{{ job.last_run_time|date:"M d, Y, P"|default:"Never" }}</span>
+                        </p>
+                         <p class="card-text small text-muted">
+                            <strong>Last Success:</strong> <span data-last-success>{{ job.last_success_time|date:"M d, Y, P"|default:"Never" }}</span>
+                        </p>
+                        
+                        <div class="log-message-container small text-danger bg-light p-2 mt-3 rounded border" style="display: none;" data-log-message-container>
+                           <strong class="d-block mb-1">Error Log:</strong>
+                           <pre class="mb-0" style="white-space: pre-wrap; word-wrap: break-word;" data-log-message></pre>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <form action="{% url 'run_script' job.script_name %}" method="post" class="d-flex align-items-center">
+                            {% csrf_token %}
+                            <input type="date" name="run_date" class="form-control form-control-sm me-2" title="Select a date to run for. Leave blank for today.">
+                            <button type="submit" class="btn btn-sm btn-primary text-nowrap">
+                                <i class="bi bi-play-fill"></i> Run Now
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
             {% endfor %}
-        </tbody>
-    </table>
-</div>
+        </div>
+    </div>
 
-<script>
-    // URLs to fetch logs from (replace with your real endpoints)
-    // const logEndpoints = {
-    //     'log-nrldc': '/api/logs/nrldc/',
-    //     'log-srldc': '/api/logs/srldc/',
-    //     'log-wrldc': '/api/logs/wrldc/'
-    // };
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusEndpoint = "{% url 'dashboard_status_api' %}";
 
-
-    function fetchLog(url, elementId) {
-        fetch(url)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                const logElement = document.getElementById(elementId);
-                if (logElement) {
-                    logElement.textContent = data.log || 'No logs available.';
-                    logElement.scrollTop = logElement.scrollHeight;  // Auto scroll to bottom
+            function getStatusColor(status) {
+                switch (status) {
+                    case 'SUCCESS': return 'bg-success';
+                    case 'FAILED': return 'bg-danger';
+                    case 'RUNNING': return 'bg-primary';
+                    default: return 'bg-secondary';
                 }
-            })
-            .catch(error => {
-                const logElement = document.getElementById(elementId);
-                if (logElement) {
-                    logElement.textContent = `Error fetching logs: ${error}`;
+            }
+
+            async function updateDashboard() {
+                try {
+                    const response = await fetch(statusEndpoint);
+                    const jobs = await response.json();
+
+                    jobs.forEach(job => {
+                        const card = document.getElementById(`job-${job.script_name}`);
+                        if (!card) return;
+
+                        // Update Status Badge
+                        const statusBadge = card.querySelector('[data-status-badge]');
+                        const statusText = job.status.charAt(0).toUpperCase() + job.status.slice(1).toLowerCase();
+                        statusBadge.className = `badge ${getStatusColor(job.status)}`;
+                        
+                        if (job.status === 'RUNNING') {
+                            statusBadge.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Running`;
+                        } else {
+                            statusBadge.textContent = statusText;
+                        }
+
+                        // Update Data Status Icon
+                        const dataStatus = card.querySelector('[data-data-status]');
+                        dataStatus.innerHTML = job.is_data_available_today 
+                            ? `<i class="bi bi-check-circle-fill text-success"></i> Available`
+                            : `<i class="bi bi-x-circle-fill text-danger"></i> Missing`;
+
+                        // Update Timestamps
+                        card.querySelector('[data-last-run]').textContent = job.last_run_time || 'Never';
+                        card.querySelector('[data-last-success]').textContent = job.last_success_time || 'Never';
+                        
+                        // Update Log Message
+                        const logContainer = card.querySelector('[data-log-message-container]');
+                        const logMessage = card.querySelector('[data-log-message]');
+                        if (job.status === 'FAILED' && job.log_message) {
+                            logMessage.textContent = job.log_message;
+                            logContainer.style.display = 'block';
+                        } else {
+                            logContainer.style.display = 'none';
+                        }
+                    });
+
+                    document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+
+                } catch (error) {
+                    console.error('Failed to fetch dashboard status:', error);
                 }
-                console.error('Error fetching logs for ' + elementId, error);
-            });
-    }
+            }
 
-
-    function updateAllLogs() {
-        for (const [elementId, url] of Object.entries(logEndpoints)) {
-            fetchLog(url, elementId);
-        }
-    }
-
-
-    // Initial fetch and then update every 3 seconds
-    updateAllLogs();
-    setInterval(updateAllLogs, 3000);
-
-</script>
-{% endblock %}
+            // Poll every 5 seconds
+            setInterval(updateDashboard, 5000);
+            updateDashboard(); // Initial call
+        });
+    </script>
+</body>
+</html>
