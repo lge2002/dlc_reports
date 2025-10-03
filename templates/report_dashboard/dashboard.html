@@ -1,135 +1,215 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automation Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f8f9fa; }
-        .card-header .spinner-border { width: 1.2rem; height: 1.2rem; vertical-align: text-bottom; }
-        pre { font-size: 0.8rem; }
-    </style>
-</head>
-<body>
-    <div class="container my-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h2">Automation Process Dashboard</h1>
-            <div id="last-updated" class="text-muted small"></div>
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex min-h-screen bg-slate-100 font-sans">
+
+    <aside class="w-64 bg-slate-800 text-white p-6 hidden lg:flex flex-col">
+        <div class="mb-10">
+            <h1 class="text-2xl font-bold">Leap Green Energy</h1>
+            <p class="text-sm text-slate-400">Automation</p>
         </div>
+        <nav class="flex-1">
+            <a href="#" class="flex items-center gap-3 py-2 px-3 rounded bg-slate-700 text-white">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 py-2 px-3 rounded hover:bg-slate-700 text-slate-300 mt-2">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-6 sm:p-8">
+
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+            <div>
+                <h2 class="text-3xl font-bold text-slate-800">Process Dashboard</h2>
+                <p class="text-slate-500">Real-time status of all reporting jobs.</p>
+            </div>
+            <div id="last-updated" class="text-slate-500 text-sm mt-2 sm:mt-0"></div>
+        </header>
         
-        <div class="row" id="dashboard-grid">
-            {% for job in jobs %}
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card shadow-sm" id="job-{{ job.script_name }}">
-                    <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-                        <span class="text-capitalize">{{ job.script_name }}</span>
-                        <span class="badge" data-status-badge>{{ job.get_status_display }}</span>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text mb-2">
-                            <strong>Today's Data:</strong>
-                            <span data-data-status>
+        <div class="bg-white rounded-xl shadow-md">
+            <div class="p-4 border-b border-slate-200">
+                <h3 class="text-xl font-bold text-slate-700">Report Status</h3>
+            </div>
+            <div class="divide-y divide-slate-200">
+                {% for job in jobs %}
+                <div class="accordion-item" id="job-{{ job.script_name }}">
+                    <button class="accordion-trigger w-full flex justify-between items-center p-4 text-left hover:bg-slate-50 focus:outline-none">
+                        <span class="text-lg font-bold text-slate-700 capitalize">{{ job.script_name|cut:"_report" }}</span>
+                        <div class="flex items-center gap-4">
+                            <span class="font-medium text-sm" data-data-status>
                                 {% if job.is_data_available_today %}
-                                    <i class="bi bi-check-circle-fill text-success"></i> Available
+                                    <span class="text-green-600">Data Available</span>
                                 {% else %}
-                                    <i class="bi bi-x-circle-fill text-danger"></i> Missing
+                                    <span class="text-red-600">Data Missing</span>
                                 {% endif %}
                             </span>
-                        </p>
-                        <p class="card-text small text-muted mb-1">
-                            <strong>Last Run:</strong> <span data-last-run>{{ job.last_run_time|date:"M d, Y, P"|default:"Never" }}</span>
-                        </p>
-                         <p class="card-text small text-muted">
-                            <strong>Last Success:</strong> <span data-last-success>{{ job.last_success_time|date:"M d, Y, P"|default:"Never" }}</span>
-                        </p>
-                        
-                        <div class="log-message-container small text-danger bg-light p-2 mt-3 rounded border" style="display: none;" data-log-message-container>
-                           <strong class="d-block mb-1">Error Log:</strong>
-                           <pre class="mb-0" style="white-space: pre-wrap; word-wrap: break-word;" data-log-message></pre>
+                            <i class="bi bi-chevron-down text-slate-500 transition-transform duration-300"></i>
+                        </div>
+                    </button>
+                    
+                    <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                        <div class="p-5 bg-slate-50 border-t border-slate-200">
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="text-sm space-y-3">
+                                    <p class="flex justify-between text-slate-500">
+                                        <span>Last Run:</span>
+                                        <strong class="text-slate-700" data-last-run>{{ job.last_run_time|date:"M d, Y, P"|default:"Never" }}</strong>
+                                    </p>
+                                    <p class="flex justify-between text-slate-500">
+                                        <span>Last Success:</span>
+                                        <strong class="text-slate-700" data-last-success>{{ job.last_success_time|date:"M d, Y, P"|default:"Never" }}</strong>
+                                    </p>
+                                     <p class="flex justify-between text-slate-500 items-center">
+                                        <span>Job Status:</span>
+                                        <span class="text-xs font-medium px-3 py-1 rounded-full" data-status-badge>{{ job.get_status_display }}</span>
+                                    </p>
+                                </div>
+                                <div>
+                                     <form action="{% url 'run_script' job.script_name %}" method="post" class="run-script-form flex items-center gap-3">
+                                        {% csrf_token %}
+                                        <input type="date" name="run_date" class="block w-full text-sm border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                        <button type="submit" class="inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 w-28">
+                                            <i class="bi bi-play-fill"></i> Run
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="log-message-container mt-4 text-xs text-red-700 bg-red-100 p-3 rounded-lg border border-red-200" style="display: none;" data-log-message-container>
+                                <strong class="font-bold block mb-1">Error Log:</strong>
+                                <pre class="whitespace-pre-wrap break-all font-mono" data-log-message></pre>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-footer bg-light">
-                        <form action="{% url 'run_script' job.script_name %}" method="post" class="d-flex align-items-center">
-                            {% csrf_token %}
-                            <input type="date" name="run_date" class="form-control form-control-sm me-2" title="Select a date to run for. Leave blank for today.">
-                            <button type="submit" class="btn btn-sm btn-primary text-nowrap">
-                                <i class="bi bi-play-fill"></i> Run Now
-                            </button>
-                        </form>
-                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
-    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const statusEndpoint = "{% url 'dashboard_status_api' %}";
+    </main>
+</div>
 
-            function getStatusColor(status) {
-                switch (status) {
-                    case 'SUCCESS': return 'bg-success';
-                    case 'FAILED': return 'bg-danger';
-                    case 'RUNNING': return 'bg-primary';
-                    default: return 'bg-secondary';
-                }
-            }
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    
+    // ===================================
+    // SECTION 1: API POLLING & UI UPDATES
+    // ===================================
+    const statusEndpoint = "{% url 'dashboard_status_api' %}";
 
-            async function updateDashboard() {
-                try {
-                    const response = await fetch(statusEndpoint);
-                    const jobs = await response.json();
+    function getStatusColor(status) {
+        switch (status) {
+            case 'SUCCESS': return { bg: 'bg-green-100', text: 'text-green-800' };
+            case 'FAILED': return { bg: 'bg-red-100', text: 'text-red-800' };
+            case 'RUNNING': return { bg: 'bg-blue-100', text: 'text-blue-800' };
+            default: return { bg: 'bg-gray-100', text: 'text-gray-800' };
+        }
+    }
 
-                    jobs.forEach(job => {
-                        const card = document.getElementById(`job-${job.script_name}`);
-                        if (!card) return;
+    function updateJobStatusUI(jobItem, status, logMessage = '') {
+        const statusBadge = jobItem.querySelector('[data-status-badge]');
+        if (!statusBadge) return;
+        
+        const colors = getStatusColor(status);
+        statusBadge.className = `text-xs font-medium px-3 py-1 rounded-full ${colors.bg} ${colors.text}`;
+        
+        const statusText = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+        
+        if (status === 'RUNNING') {
+            statusBadge.innerHTML = `<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>`;
+        } else {
+            statusBadge.textContent = statusText;
+        }
 
-                        // Update Status Badge
-                        const statusBadge = card.querySelector('[data-status-badge]');
-                        const statusText = job.status.charAt(0).toUpperCase() + job.status.slice(1).toLowerCase();
-                        statusBadge.className = `badge ${getStatusColor(job.status)}`;
-                        
-                        if (job.status === 'RUNNING') {
-                            statusBadge.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Running`;
-                        } else {
-                            statusBadge.textContent = statusText;
-                        }
+        const logContainer = jobItem.querySelector('[data-log-message-container]');
+        if (status === 'FAILED' && logMessage) {
+            logContainer.querySelector('[data-log-message]').textContent = logMessage;
+            logContainer.style.display = 'block';
+        } else {
+            logContainer.style.display = 'none';
+        }
+    }
 
-                        // Update Data Status Icon
-                        const dataStatus = card.querySelector('[data-data-status]');
-                        dataStatus.innerHTML = job.is_data_available_today 
-                            ? `<i class="bi bi-check-circle-fill text-success"></i> Available`
-                            : `<i class="bi bi-x-circle-fill text-danger"></i> Missing`;
+    async function updateDashboard() {
+        try {
+            const response = await fetch(statusEndpoint);
+            const jobs = await response.json();
 
-                        // Update Timestamps
-                        card.querySelector('[data-last-run]').textContent = job.last_run_time || 'Never';
-                        card.querySelector('[data-last-success]').textContent = job.last_success_time || 'Never';
-                        
-                        // Update Log Message
-                        const logContainer = card.querySelector('[data-log-message-container]');
-                        const logMessage = card.querySelector('[data-log-message]');
-                        if (job.status === 'FAILED' && job.log_message) {
-                            logMessage.textContent = job.log_message;
-                            logContainer.style.display = 'block';
-                        } else {
-                            logContainer.style.display = 'none';
-                        }
-                    });
+            jobs.forEach(job => {
+                const jobItem = document.getElementById(`job-${job.script_name}`);
+                if (!jobItem) return;
 
-                    document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                updateJobStatusUI(jobItem, job.status, job.log_message);
+                
+                jobItem.querySelector('[data-data-status]').innerHTML = job.is_data_available_today 
+                    ? `<span class="text-green-600">Data Available</span>`
+                    : `<span class="text-red-600">Data Missing</span>`;
 
-                } catch (error) {
-                    console.error('Failed to fetch dashboard status:', error);
-                }
-            }
+                jobItem.querySelector('[data-last-run]').textContent = job.last_run_time || 'Never';
+                jobItem.querySelector('[data-last-success]').textContent = job.last_success_time || 'Never';
+            });
 
-            // Poll every 5 seconds
-            setInterval(updateDashboard, 5000);
-            updateDashboard(); // Initial call
+            document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+
+        } catch (error) {
+            console.error('Failed to fetch dashboard status:', error);
+        }
+    }
+    
+    setInterval(updateDashboard, 5000);
+    updateDashboard();
+
+    // =================================
+    // SECTION 2: AJAX FORM SUBMISSION
+    // =================================
+    const runForms = document.querySelectorAll('.run-script-form');
+    runForms.forEach(form => {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const button = form.querySelector('button[type="submit"]');
+            const jobItem = form.closest('.accordion-item');
+
+            button.disabled = true;
+            button.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>`;
+            updateJobStatusUI(jobItem, 'RUNNING');
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="bi bi-play-fill"></i> Run';
+                }, 3000);
+            });
         });
-    </script>
-</body>
-</html>
+    });
+
+    // =================================
+    // SECTION 3: ACCORDION LOGIC
+    // =================================
+    const accordionTriggers = document.querySelectorAll('.accordion-trigger');
+    accordionTriggers.forEach(trigger => {
+        trigger.addEventListener('click', () => {
+            const content = trigger.nextElementSibling;
+            const icon = trigger.querySelector('i.bi-chevron-down');
+
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                icon.classList.remove('rotate-180');
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.classList.add('rotate-180');
+            }
+        });
+    });
+
+});
+</script>
+{% endblock %}

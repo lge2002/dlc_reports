@@ -36,10 +36,24 @@ class Command(BaseCommand):
             fh.setFormatter(formatter)
             self.logger.addHandler(fh)
 
+    # ===================================================================
+    # UPDATED `write` METHOD
+    # This is the only function that has been changed.
+    # ===================================================================
     def write(self, message, level='info', style=None):
-        # Using style argument to avoid conflict with self.style
-        output_func = self.stdout.write if style is None else style
-        output_func(message)
+        # Create the final message string first
+        # The '\n' ensures each message is on a new line in the terminal
+        final_message = f"{message}\n"
+
+        # If a style function was passed, apply it to the message
+        if style:
+            styled_message = style(final_message)
+            self.stdout.write(styled_message)
+        else:
+            # Otherwise, write the plain message
+            self.stdout.write(final_message)
+
+        # Logging remains the same (it logs the un-styled message)
         if level == 'info':
             self.logger.info(message)
         elif level == 'warning':
@@ -202,9 +216,6 @@ class Command(BaseCommand):
         else:
             self.write("⚠️ No tables were successfully extracted to create a combined JSON.", level='warning', style=self.style.WARNING)
 
-    # ===================================================================
-    # NEW CODE: This function is added to accept the --date argument
-    # ===================================================================
     def add_arguments(self, parser):
         parser.add_argument(
             '--date',
@@ -212,24 +223,16 @@ class Command(BaseCommand):
             help='Run the script for a specific date in YYYY-MM-DD format.'
         )
 
-    # ===================================================================
-    # UPDATED `handle` METHOD
-    # This now wraps your original logic to update the dashboard.
-    # ===================================================================
     def handle(self, *args, **options):
-        script_name = 'nrldc_report'
+        script_name = 'nrldc_project'
         job, _ = AutomationJob.objects.get_or_create(script_name=script_name)
 
-        # 1. SET STATUS TO RUNNING at the start
         job.status = AutomationJob.Status.RUNNING
         job.last_run_time = timezone.now()
         job.log_message = "Starting process..."
         job.save()
 
         try:
-            # --- This is where YOUR ORIGINAL `handle` logic begins ---
-            
-            # Determine the date to run for (from --date argument or today)
             run_date_str = options.get('date')
             if run_date_str:
                 target_date = datetime.datetime.strptime(run_date_str, '%Y-%m-%d').date()
@@ -245,7 +248,6 @@ class Command(BaseCommand):
                Nrldc2CData.objects.filter(report_date=target_date).exists():
                 message = f"✅ Pass: Data for {target_date_str} already exists. Skipping."
                 self.write(message, style=self.style.SUCCESS)
-                # If data exists, it's a success from the dashboard's perspective
                 job.status = AutomationJob.Status.SUCCESS
                 job.is_data_available_today = (target_date == datetime.date.today())
                 job.log_message = f"Data for {target_date_str} already exists."
@@ -263,7 +265,7 @@ class Command(BaseCommand):
             if data.get("recordsFiltered", 0) == 0:
                 message = f"⚠️ No report available for {target_date_str}."
                 self.write(message, level='warning', style=self.style.WARNING)
-                raise CommandError(message) # This will be caught and logged to the dashboard
+                raise CommandError(message)
 
             file_info = data["data"][0]
             download_url = f"https://nrldc.in/download-file?any=Reports%2FDaily%2FDaily%20PSP%20Report%2F{file_info['file_name']}"
@@ -282,9 +284,6 @@ class Command(BaseCommand):
 
             self.extract_tables_from_pdf(pdf_path, output_dir, target_date)
 
-            # --- Your original logic ends here ---
-
-            # 2. IF SUCCESSFUL, UPDATE STATUS
             job.status = AutomationJob.Status.SUCCESS
             job.last_success_time = timezone.now()
             job.is_data_available_today = (target_date == datetime.date.today())
@@ -292,13 +291,11 @@ class Command(BaseCommand):
             self.write('Successfully completed the process.', style=self.style.SUCCESS)
 
         except Exception as e:
-            # 3. IF AN ERROR OCCURS, LOG IT TO THE DASHBOARD
             error_message = traceback.format_exc()
             job.status = AutomationJob.Status.FAILED
-            job.log_message = str(e)  # Store a concise error for the dashboard UI
+            job.log_message = str(e)
             self.write(f'An error occurred: {e}', level='error', style=self.style.ERROR)
-            self.logger.error(f"Full traceback:\n{error_message}") # Log full details to file
+            self.logger.error(f"Full traceback:\n{error_message}")
             
         finally:
-            # 4. SAVE THE FINAL STATE OF THE JOB (success or failure)
             job.save()

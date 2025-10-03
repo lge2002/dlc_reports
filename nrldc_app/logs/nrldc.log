@@ -128,3 +128,33 @@
 2025-10-03 09:25:41,597 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-03 - RAILWAYS_NRISTS[0m
 2025-10-03 09:25:41,603 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-03 - NR[0m
 2025-10-03 09:25:41,603 - INFO - [32;1m✅ Table 2(C) data saved to database.[0m
+2025-10-03 14:16:02,973 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 14:16:02,974 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.
+2025-10-03 14:16:15,577 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 14:16:15,578 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.
+2025-10-03 14:17:40,694 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 14:17:40,696 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.
+2025-10-03 14:18:28,711 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 14:18:28,712 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.
+2025-10-03 14:19:27,651 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 14:19:27,652 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.
+2025-10-03 14:19:35,810 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 14:19:35,811 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.
+2025-10-03 14:19:39,334 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 14:19:39,336 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.
+2025-10-03 14:24:41,854 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 14:24:41,855 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.
+2025-10-03 14:28:00,156 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 14:28:00,157 - INFO - 🌐 Fetching NRDC report metadata for 2025-10-03...
+2025-10-03 14:28:01,436 - INFO - ⬇️ Attempting to download PDF to: downloads\NRLDC\report_20251003\daily021025.pdf
+2025-10-03 14:28:02,336 - INFO - ✅ Downloaded report to: downloads\NRLDC\report_20251003\daily021025.pdf
+2025-10-03 14:28:02,337 - INFO - 🔍 Extracting tables from PDF...
+2025-10-03 14:28:05,169 - INFO - ✅ Found 18 tables.
+2025-10-03 14:28:05,192 - INFO - ✅ Table 2(A) extracted for combined JSON.
+2025-10-03 14:28:05,227 - INFO - ✅ Table 2(A) data saved to database.
+2025-10-03 14:28:05,247 - INFO - ✅ Table 2(C) extracted for combined JSON.
+2025-10-03 14:28:05,282 - INFO - ✅ Table 2(C) data saved to database.
+2025-10-03 14:28:05,284 - INFO - ✅ Combined tables saved to: downloads\NRLDC\report_20251003\nrldc_03102025.json
+2025-10-03 14:28:05,284 - INFO - Successfully completed the process.
+2025-10-03 14:30:40,222 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 14:30:40,223 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.

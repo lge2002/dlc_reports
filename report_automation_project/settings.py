@@ -40,8 +40,22 @@ INSTALLED_APPS = [
     'nrldc_app',
     'srldc_app',
     'wrldc_app',
-    'report_dashboard','posoco'
+    'report_dashboard',
+    'posoco',
+    'tailwind',
+    'theme',
+    'merger',
 ]
+
+
+TAILWIND_APP_NAME = 'theme'
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+# Add this line to the end of your settings.py
+NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
