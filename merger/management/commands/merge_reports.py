@@ -7,11 +7,11 @@ import requests
 from glob import glob
 from datetime import datetime, timedelta
 
-# NEW: Import the necessary Django classes
 from django.core.management.base import BaseCommand, CommandError
 
 # Your original functions and data structures remain unchanged
 def extract_date_from_filename(filename):
+    # ... (this function is unchanged) ...
     patterns = [
         (r'(\d{4})-(\d{2})-(\d{2})', (1, 2, 3)), 
         (r'(\d{2})-(\d{2})-(\d{4})', (3, 2, 1)), 
@@ -41,7 +41,7 @@ report_dirs = {
 }
 
 empty_templates = {
-    # This dictionary is exactly the same as in your script
+    # ... (this dictionary is unchanged) ...
     'NRLDC': {
         "date": None,
         "nrldc_table_2A": [
@@ -102,98 +102,112 @@ empty_templates = {
 }
 
 
-# NEW: All of your script's logic is now inside the 'Command' class
 class Command(BaseCommand):
     help = 'Merges the latest JSON reports from all sources and pushes to an API.'
 
-    # NEW: The main execution logic goes into the handle() method
-    def handle(self, *args, **options):
-        
-        # Use yesterday's date for API URL and pushed data
-        yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-        BASE_API_URL = "http://172.16.7.118:8003/api/tamilnadu/wind/api.grid.php"
-        api_url_with_date = f"{BASE_API_URL}?date={yesterday_date}"
+    # NEW: Add the --date argument
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--date',
+            type=str,
+            help='Merge reports for a specific date in YYYY-MM-DD format. Defaults to today.'
+        )
 
+    def handle(self, *args, **options):
+        # NEW: Determine the target date dynamically
+        date_str_option = options.get('date')
+        if date_str_option:
+            try:
+                # Use the date provided by the user
+                target_datetime = datetime.strptime(date_str_option, '%Y-%m-%d')
+            except ValueError:
+                raise CommandError("Date format is incorrect. Please use YYYY-MM-DD.")
+        else:
+            # Default to today if no date is provided
+            target_datetime = datetime.now()
+
+        # The date for finding report files
+        target_date_str = target_datetime.strftime('%Y-%m-%d')
+        # The date for the API payload and final report (always the day before the target)
+        report_date = (target_datetime - timedelta(days=1)).strftime('%Y-%m-%d')
+
+        BASE_API_URL = "http://172.16.7.118:8003/api/tamilnadu/wind/api.grid.php"
+        api_url_with_date = f"{BASE_API_URL}?date={report_date}"
         merged_data = {}
 
-        # Pick JSON files from current date
-        today_str = datetime.now().strftime('%Y-%m-%d')
         for region, report_dir in report_dirs.items():
             region_data = None
             try:
-                # List all subdirectories
-                all_subdirs = [d for d in os.listdir(report_dir) if os.path.isdir(os.path.join(report_dir, d))]
-                # Find subdir with today's date
-                today_subdir = None
-                for d in all_subdirs:
-                    if today_str in d:
-                        today_subdir = d
-                        break
-                if today_subdir:
-                    full_subdir = os.path.join(report_dir, today_subdir)
+                # UPDATED LOGIC: Find the latest subdirectory for the target date
+                subdirs_for_date = [
+                    d for d in os.listdir(report_dir)
+                    if os.path.isdir(os.path.join(report_dir, d)) and d.startswith(f'report_{target_date_str}')
+                ]
+                
+                if subdirs_for_date:
+                    # Sort to get the latest directory (e.g., ..._09-31-20 is newer than ..._09-30-26)
+                    latest_subdir_name = sorted(subdirs_for_date)[-1]
+                    full_subdir = os.path.join(report_dir, latest_subdir_name)
+                    
+                    # Find the JSON file inside the latest subdirectory
                     json_files = glob(os.path.join(full_subdir, '*.json'))
-                    json_file_name = None
+                    
                     if json_files:
-                        # Pick the newest JSON file in today's subdir
-                        json_file_name = sorted(json_files, key=os.path.getmtime, reverse=True)[0]
-                    if not json_file_name:
-                        self.stdout.write(self.style.WARNING(f"No JSON files found in {full_subdir} for {region}, using empty template."))
-                        region_data = empty_templates.get(region, {})
-                    else:
+                        json_file_name = json_files[0] # Assume only one JSON per folder
                         try:
                             with open(json_file_name, 'r', encoding='utf-8') as f:
                                 data = json.load(f)
-                                inner_data = data.get(region, data)
-                                # Always set date to today for merged data
-                                restructured_data = {'date': today_str, **inner_data}
-                                template = empty_templates.get(region, {})
-                                for table_key, template_value in template.items():
-                                    if table_key == 'date':
-                                        continue
-                                    table_content = restructured_data.get(table_key)
-                                    if not table_content or not any(table_content):
-                                        self.stdout.write(self.style.WARNING(f"⚠️ Missing or empty table '{table_key}' for {region}, applying empty template."))
-                                        restructured_data[table_key] = template_value
-                                region_data = restructured_data
-                                self.stdout.write(self.style.SUCCESS(f"✅ Merged data for {region} from {json_file_name}"))
+                            
+                            inner_data = data.get(region, data)
+                            restructured_data = {'date': report_date, **inner_data} # Use report_date
+                            
+                            # Validate against template
+                            template = empty_templates.get(region, {})
+                            for table_key, template_value in template.items():
+                                if table_key != 'date' and (not restructured_data.get(table_key) or not any(restructured_data.get(table_key))):
+                                    self.stdout.write(self.style.WARNING(f"⚠️ Missing or empty table '{table_key}' for {region}, applying empty template."))
+                                    restructured_data[table_key] = template_value
+                            
+                            region_data = restructured_data
+                            self.stdout.write(self.style.SUCCESS(f"✅ Merged data for {region} from {json_file_name}"))
+
                         except Exception as e:
-                            self.stdout.write(self.style.ERROR(f"Error reading or validating {json_file_name} for {region}: {e}, using empty template."))
+                            self.stdout.write(self.style.ERROR(f"Error reading {json_file_name} for {region}: {e}, using empty template."))
                             region_data = empty_templates.get(region, {})
+                    else:
+                        self.stdout.write(self.style.WARNING(f"No JSON files found in {full_subdir} for {region}, using empty template."))
+                        region_data = empty_templates.get(region, {})
                 else:
-                    self.stdout.write(self.style.WARNING(f"No subdir for today ({today_str}) in {report_dir} for {region}, using empty template."))
+                    self.stdout.write(self.style.WARNING(f"No subdir for '{target_date_str}' in {report_dir} for {region}, using empty template."))
                     region_data = empty_templates.get(region, {})
+
             except (FileNotFoundError, NotADirectoryError):
-                self.stdout.write(self.style.ERROR(f"Directory not found or is not a directory: {report_dir}, using empty template."))
+                self.stdout.write(self.style.ERROR(f"Directory not found: {report_dir}, using empty template."))
                 region_data = empty_templates.get(region, {})
-            # Always set date to yesterday for merged data
+
+            # Set the final date for the payload
             if region_data:
-                region_data['date'] = yesterday_date
+                region_data['date'] = report_date
             merged_data[region] = region_data
 
-        headers = {
-            "Content-Type": "application/json"
-        }
-
+        # --- API PUSH and SAVE LOCALLY (Unchanged) ---
+        headers = {"Content-Type": "application/json"}
         try:
             self.stdout.write(f"\nAttempting to push data to: {api_url_with_date}...")
             response = requests.post(api_url_with_date, headers=headers, json=merged_data, timeout=30)
-
             if response.status_code in [200, 201]:
                 self.stdout.write(self.style.SUCCESS(f"✅ Successfully pushed data to API. Status Code: {response.status_code}"))
-                self.stdout.write(f"Response text: {response.text}") 
+                self.stdout.write(f"Response text: {response.text}")
             else:
                 self.stdout.write(self.style.ERROR(f"Failed to push data. Status Code: {response.status_code}"))
                 self.stdout.write(f"Error Response: {response.text}")
         except requests.exceptions.RequestException as e:
-            # Use CommandError to signal a critical failure to Django
             raise CommandError(f"🚨 An error occurred while trying to connect to the API: {e}")
 
-        save_locally = True
-        if save_locally:
-            output_dir = os.path.join('downloads', 'overall_json')
-            os.makedirs(output_dir, exist_ok=True)
-            timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            output_path = os.path.join(output_dir, f'merged_reports_{timestamp}.json')
-            with open(output_path, 'w', encoding='utf-8') as f:
-                json.dump(merged_data, f, indent=2, ensure_ascii=False)
-            self.stdout.write(self.style.SUCCESS(f"\nMerged latest reports for {yesterday_date} saved to {output_path}"))
+        output_dir = os.path.join('downloads', 'overall_json')
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        output_path = os.path.join(output_dir, f'merged_reports_{timestamp}.json')
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(merged_data, f, indent=2, ensure_ascii=False)
+        self.stdout.write(self.style.SUCCESS(f"\nMerged latest reports for {report_date} saved to {output_path}"))

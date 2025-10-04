@@ -81,29 +81,47 @@ def fetch_latest_pdf(api_url, base_url, payload, report_dir, timestamp):
 def extract_tables_from_pdf(pdf_file, report_dir, timestamp):
     """
     Extracts tables, renames headings, and saves as JSON.
-    This version dynamically finds tables based on their content, not their position.
+    This version uses flexible matching to handle unpredictable keys.
     """
-    # Dictionary to map long original names to short, clean names
-    KEY_MAPPING = {
-        # Table A keys
-        "Demand Met during Evening Peak hrs(MW) (at 20:00 hrs; from RLDCs)": "demand_evening_peak",
-        "Peak Shortage (MW)": "peak_shortage",
-        "Energy Met (MU)": "energy",
-        "Hydro Gen (MU)": "hydro",
-        "Wind Gen (MU)": "wind",
-        "Solar Gen (MU)*": "solar",
-        "Energy Shortage (MU)": "energy_shortage",
-        "Maximum Demand Met During the Day (MW) (From NLDC SCADA)": "max_demand_day",
-        "Time Of Maximum Demand Met": "time_of_max_demand",
-        # Table G keys
-        "Coal": "coal",
-        "Lignite": "lignite",
-        "Hydro": "hydro",
-        "Nuclear": "nuclear",
-        "Gas, Naptha & Diesel": "gas_naptha_diesel",
-        "RES (Wind, Solar, Biomass & Others)": "res_total",
-        "Total": "total"
-    }
+    # This helper function provides the flexible matching logic
+    def get_short_key_simple(long_key):
+        key = long_key.strip()
+        
+        # We check for the most specific keys first to avoid errors
+        if key.startswith("Demand Met during Evening Peak"):
+            return "demand_evening_peak"
+        if key.startswith("Energy Shortage"):
+            return "energy_shortage"
+        if key.startswith("Maximum Demand Met During the Day"):
+            return "max_demand_day"
+        if key.startswith("Time Of Maximum Demand Met"):
+            return "time_of_max_demand"
+        if key.startswith("Peak Shortage"):
+            return "peak_shortage"
+        if key.startswith("Energy Met"):
+            return "energy"
+        if key.startswith("Hydro Gen"): # Must be checked before "Hydro"
+            return "hydro"
+        if key.startswith("Wind Gen"):
+            return "wind"
+        if key.startswith("Solar Gen"):
+            return "solar"
+        if key == "Coal":
+            return "coal"
+        if key == "Lignite":
+            return "lignite"
+        if key == "Hydro":
+            return "hydro"
+        if key == "Nuclear":
+            return "nuclear"
+        if key == "Gas, Naptha & Diesel":
+            return "gas_naptha_diesel"
+        if key.startswith("RES"):
+            return "res_total"
+        if key == "Total":
+            return "total"
+            
+        return key # Fallback to the original key if no match is found
 
     try:
         tables = tabula.read_pdf(pdf_file, pages="all", multiple_tables=True, lattice=True)
@@ -142,28 +160,22 @@ def extract_tables_from_pdf(pdf_file, report_dir, timestamp):
 
     # Process Table A if it was found
     if table_a_df is not None:
-        df1 = table_a_df.dropna(how="all").reset_index(drop=True)
+        table_a_df = table_a_df.set_index(table_a_df.columns[0]).dropna(how='all')
         table_a_dict = {}
-        for _, row in df1.iterrows():
-            row_dict = row.to_dict()
-            original_key = row_dict.pop("Unnamed: 0", None)
-            if original_key:
-                clean_key = ' '.join(str(original_key).replace('\r', ' ').split())
-                short_key = KEY_MAPPING.get(clean_key, clean_key)
-                table_a_dict[short_key] = row_dict
+        for original_key, row in table_a_df.iterrows():
+            clean_key = ' '.join(str(original_key).replace('\r', ' ').split())
+            short_key = get_short_key_simple(clean_key) # Use the new simple function
+            table_a_dict[short_key] = row.dropna().to_dict()
         final_json["POSOCO"]["posoco_table_a"].append(table_a_dict)
 
     # Process Table G if it was found
     if table_g_df is not None:
-        df7 = table_g_df.dropna(how="all").reset_index(drop=True)
+        table_g_df = table_g_df.set_index(table_g_df.columns[0]).dropna(how='all')
         table_g_dict = {}
-        for _, row in df7.iterrows():
-            row_dict = row.to_dict()
-            original_key = row_dict.pop("Unnamed: 0", None)
-            if original_key:
-                clean_key = str(original_key).strip()
-                short_key = KEY_MAPPING.get(clean_key, clean_key)
-                table_g_dict[short_key] = row_dict
+        for original_key, row in table_g_df.iterrows():
+            clean_key = str(original_key).strip()
+            short_key = get_short_key_simple(clean_key) # Use the new simple function
+            table_g_dict[short_key] = row.dropna().to_dict()
         final_json["POSOCO"]["posoco_table_g"].append(table_g_dict)
 
     # Check if BOTH tables were not found, and if so, use the empty template.

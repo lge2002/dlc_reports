@@ -1,24 +1,15 @@
-# ===================================================================
-# ORIGINAL IMPORTS (with new ones added for the dashboard)
-# ===================================================================
 import requests
 import datetime
 import os
 import pandas as pd
 import json
 import logging
-import traceback  # Added for detailed error logging
 from django.core.management.base import BaseCommand, CommandError
-from django.utils import timezone  # Added for timestamping
 from nrldc_app.models import Nrldc2AData, Nrldc2CData
-from report_dashboard.models import AutomationJob  # Added to control the dashboard
 from tabula.io import read_pdf
 
 
 class Command(BaseCommand):
-    # ===================================================================
-    # YOUR ORIGINAL CONTENT (UNCHANGED)
-    # ===================================================================
     help = 'Download today\'s NRDC report and extract tables 2(A) and 2(C) to a single JSON file and save to DB'
 
     def __init__(self, *args, **kwargs):
@@ -36,24 +27,8 @@ class Command(BaseCommand):
             fh.setFormatter(formatter)
             self.logger.addHandler(fh)
 
-    # ===================================================================
-    # UPDATED `write` METHOD
-    # This is the only function that has been changed.
-    # ===================================================================
-    def write(self, message, level='info', style=None):
-        # Create the final message string first
-        # The '\n' ensures each message is on a new line in the terminal
-        final_message = f"{message}\n"
-
-        # If a style function was passed, apply it to the message
-        if style:
-            styled_message = style(final_message)
-            self.stdout.write(styled_message)
-        else:
-            # Otherwise, write the plain message
-            self.stdout.write(final_message)
-
-        # Logging remains the same (it logs the un-styled message)
+    def write(self, message, level='info'):
+        self.stdout.write(message)
         if level == 'info':
             self.logger.info(message)
         elif level == 'warning':
@@ -71,7 +46,7 @@ class Command(BaseCommand):
                 break
 
         if start_idx is None:
-            self.write(f"⚠️ Start marker '{start_marker}' not found for {debug_table_name}.", level='warning', style=self.style.WARNING)
+            self.write(self.style.WARNING(f"⚠️ Start marker '{start_marker}' not found for {debug_table_name}."), level='warning')
             return None
 
         if end_marker:
@@ -99,32 +74,57 @@ class Command(BaseCommand):
 
                 if debug_table_name == "Table 2(A)":
                     new_columns = [
-                        'State', 'Thermal', 'Hydro', 'Gas/Naptha/Diesel', 'Solar', 'Wind',
-                        'Others(Biomass/Co-gen etc.)', 'Total', 'Drawal Sch (Net MU)',
-                        'Act Drawal (Net MU)', 'UI (Net MU)', 'Requirement (Net MU)',
-                        'Shortage (Net MU)', 'Consumption (Net MU)'
+                        'State',
+                        'Thermal',
+                        'Hydro',
+                        'Gas/Naptha/Diesel',
+                        'Solar',
+                        'Wind',
+                        'Others(Biomass/Co-gen etc.)',
+                        'Total',
+                        'Drawal Sch (Net MU)',
+                        'Act Drawal (Net MU)',
+                        'UI (Net MU)',
+                        'Requirement (Net MU)',
+                        'Shortage (Net MU)',
+                        'Consumption (Net MU)'
                     ]
                 elif debug_table_name == "Table 2(C)":
                     new_columns = [
-                        'State', 'Maximum Demand Met of the day', 'Time',
-                        'Shortage during maximum demand', 'Requirement at maximum demand',
-                        'Maximum requirement of the day', 'Time.1',
+                        'State',
+                        'Maximum Demand Met of the day',
+                        'Time',
+                        'Shortage during maximum demand',
+                        'Requirement at maximum demand',
+                        'Maximum requirement of the day',
+                        'Time.1',
                         'Shortage during maximum requirement',
-                        'Demand Met at maximum Requirement', 'Min Demand Met', 'Time.2',
-                        'ACE_MAX', 'ACE_MIN', 'Time.3', 'Time.4'
+                        'Demand Met at maximum Requirement',
+                        'Min Demand Met',
+                        'Time.2',
+                        'ACE_MAX',
+                        'ACE_MIN',
+                        'Time.3',
+                        'Time.4'
                     ]
                 else:
-                    self.write(f"⚠️ Custom header combination logic not defined for {debug_table_name}.", level='warning', style=self.style.WARNING)
+                    self.write(self.style.WARNING(f"⚠️ Custom header combination logic not defined for {debug_table_name}. Falling back to generic combination."), level='warning')
                     for idx in range(raw_top_header.shape[0]):
                         t_col = raw_top_header.iloc[idx].strip()
                         b_col = raw_bottom_header.iloc[idx].strip()
-                        if not t_col and not b_col: new_columns.append(f"Unnamed_{idx}")
-                        elif not b_col: new_columns.append(t_col)
-                        elif not t_col: new_columns.append(b_col)
-                        elif not b_col.startswith(t_col): new_columns.append(f"{t_col} {b_col}".strip())
-                        else: new_columns.append(b_col)
+
+                        if not t_col and not b_col:
+                            new_columns.append(f"Unnamed_{idx}")
+                        elif not b_col:
+                            new_columns.append(t_col)
+                        elif not t_col:
+                            new_columns.append(b_col)
+                        elif not b_col.startswith(t_col):
+                            new_columns.append(f"{t_col} {b_col}".strip())
+                        else:
+                            new_columns.append(b_col)
             else:
-                self.write(f"⚠️ Unsupported header_row_count: {header_row_count}", level='warning', style=self.style.WARNING)
+                self.write(self.style.WARNING(f"⚠️ Unsupported header_row_count: {header_row_count} for {debug_table_name}. Header processing skipped."), level='warning')
                 new_columns = None
 
             if new_columns is not None:
@@ -133,10 +133,13 @@ class Command(BaseCommand):
                     new_columns.extend([f"Unnamed_Col_{i}" for i in range(len(new_columns), expected_data_cols)])
                 elif len(new_columns) > expected_data_cols:
                     new_columns = new_columns[:expected_data_cols]
+
                 sub_df_data = raw_sub_df.iloc[data_start_row_in_raw_sub_df:].copy()
                 sub_df_data.columns = new_columns
                 sub_df_data = sub_df_data.loc[:, ~sub_df_data.columns.duplicated()]
-                sub_df_data.columns = sub_df_data.columns.astype(str).str.strip().str.replace(r'\s*\r\s*', ' ', regex=True)
+                sub_df_data.columns = sub_df_data.columns.astype(str).str.strip()
+                sub_df_data.columns = sub_df_data.columns.str.replace(r'\s*\r\s*', ' ', regex=True).str.strip()
+
                 sub_df_data = sub_df_data.dropna(axis=0, how='all')
                 return sub_df_data.dropna(axis=1, how='all')
             else:
@@ -147,155 +150,241 @@ class Command(BaseCommand):
     def _safe_float(self, value):
         if isinstance(value, str):
             value = value.strip()
-            if ':' in value: return None
+            if ':' in value:
+                return None
             value = value.replace(',', '')
-            if not value or value.lower() in ['n/a', '-', 'null', 'nan']: return None
+            if not value or value.lower() in ['n/a', '-', 'null', 'nan']:
+                return None
         try:
             return float(value)
         except (ValueError, TypeError):
             return None
 
     def _safe_string(self, value):
-        if pd.isna(value) or value is None: return None
+        if pd.isna(value) or value is None:
+            return None
         return str(value).strip() if value is not None else None
 
     def extract_tables_from_pdf(self, pdf_path, output_dir, report_date):
         self.write("🔍 Extracting tables from PDF...")
+
         try:
-            tables = read_pdf(pdf_path, pages='all', multiple_tables=True, pandas_options={'header': None}, lattice=True)
+            tables = read_pdf(
+                pdf_path,
+                pages='all',
+                multiple_tables=True,
+                pandas_options={'header': None},
+                lattice=True
+            )
         except Exception as e:
             raise CommandError(f"❌ Tabula extraction failed: {e}")
 
-        if not tables: raise CommandError("❌ No tables found in the PDF.")
-        self.write(f"✅ Found {len(tables)} tables.", style=self.style.SUCCESS)
+        if not tables:
+            raise CommandError("❌ No tables found in the PDF.")
 
-        all_content_df = pd.concat(tables, ignore_index=True)
+        self.write(self.style.SUCCESS(f"✅ Found {len(tables)} tables."))
+
+        all_content_df = pd.DataFrame()
+        for df in tables:
+            all_content_df = pd.concat([all_content_df, df], ignore_index=True)
+
         all_content_df_cleaned = all_content_df.dropna(axis=0, how='all')
+
         combined_json_data = {}
 
         # Extract Table 2(A)
-        sub_2A = self.extract_subtable_by_markers(all_content_df_cleaned, r".*2\s*\(A\)\s*State's\s*Load\s*Deails.*", r"2\s*\(B\).*", header_row_count=2, debug_table_name="Table 2(A)")
+        sub_2A = self.extract_subtable_by_markers(
+            all_content_df_cleaned,
+            start_marker=r".*2\s*\(A\)\s*State's\s*Load\s*Deails.*",
+            end_marker=r"2\s*\(B\)\s*State\s*Demand\s*Met\s*\(Peak\s*and\s*off-Peak\s*Hrs\)",
+            header_row_count=2,
+            debug_table_name="Table 2(A)"
+        )
         if sub_2A is not None:
-            column_mapping_2A = { 'State': 'state', 'Thermal': 'thermal', 'Hydro': 'hydro', 'Gas/Naptha/Diesel': 'gas_naptha_diesel', 'Solar': 'solar', 'Wind': 'wind', 'Others(Biomass/Co-gen etc.)': 'other_biomass', 'Total': 'total', 'Drawal Sch (Net MU)': 'drawal_sch', 'Act Drawal (Net MU)': 'act_drawal', 'UI (Net MU)': 'ui', 'Requirement (Net MU)': 'requirement', 'Shortage (Net MU)': 'shortage', 'Consumption (Net MU)': 'consumption' }
+            column_mapping_2A = {
+                'State': 'state',
+                'Thermal': 'thermal',
+                'Hydro': 'hydro',
+                'Gas/Naptha/Diesel': 'gas_naptha_diesel',
+                'Solar': 'solar',
+                'Wind': 'wind',
+                'Others(Biomass/Co-gen etc.)': 'other_biomass',
+                'Total': 'total',
+                'Drawal Sch (Net MU)': 'drawal_sch',
+                'Act Drawal (Net MU)': 'act_drawal',
+                'UI (Net MU)': 'ui',
+                'Requirement (Net MU)': 'requirement',
+                'Shortage (Net MU)': 'shortage',
+                'Consumption (Net MU)': 'consumption',
+            }
             sub_2A_renamed = sub_2A.rename(columns=column_mapping_2A)
             sub_2A_filtered = sub_2A_renamed[[col for col in column_mapping_2A.values() if col in sub_2A_renamed.columns]]
+
             combined_json_data['nrldc_table_2A'] = sub_2A_filtered.to_dict(orient='records')
-            self.write("✅ Table 2(A) extracted for combined JSON.", style=self.style.SUCCESS)
-            for _, row_data in sub_2A_filtered.iterrows():
+            self.write(self.style.SUCCESS(f"✅ Table 2(A) extracted for combined JSON."))
+
+            for index, row_data in sub_2A_filtered.iterrows():
                 try:
-                    _, created = Nrldc2AData.objects.update_or_create(report_date=report_date, state=self._safe_string(row_data.get('state')), defaults={ 'thermal': self._safe_float(row_data.get('thermal')), 'hydro': self._safe_float(row_data.get('hydro')), 'gas_naptha_diesel': self._safe_float(row_data.get('gas_naptha_diesel')), 'solar': self._safe_float(row_data.get('solar')), 'wind': self._safe_float(row_data.get('wind')), 'other_biomass': self._safe_float(row_data.get('other_biomass')), 'total': self._safe_float(row_data.get('total')), 'drawal_sch': self._safe_float(row_data.get('drawal_sch')), 'act_drawal': self._safe_float(row_data.get('act_drawal')), 'ui': self._safe_float(row_data.get('ui')), 'requirement': self._safe_float(row_data.get('requirement')), 'shortage': self._safe_float(row_data.get('shortage')), 'consumption': self._safe_float(row_data.get('consumption')) })
+                    obj, created = Nrldc2AData.objects.update_or_create(
+                        report_date=report_date,
+                        state=self._safe_string(row_data.get('state')),
+                        defaults={
+                            'thermal': self._safe_float(row_data.get('thermal')),
+                            'hydro': self._safe_float(row_data.get('hydro')),
+                            'gas_naptha_diesel': self._safe_float(row_data.get('gas_naptha_diesel')),
+                            'solar': self._safe_float(row_data.get('solar')),
+                            'wind': self._safe_float(row_data.get('wind')),
+                            'other_biomass': self._safe_float(row_data.get('other_biomass')),
+                            'total': self._safe_float(row_data.get('total')),
+                            'drawal_sch': self._safe_float(row_data.get('drawal_sch')),
+                            'act_drawal': self._safe_float(row_data.get('act_drawal')),
+                            'ui': self._safe_float(row_data.get('ui')),
+                            'requirement': self._safe_float(row_data.get('requirement')),
+                            'shortage': self._safe_float(row_data.get('shortage')),
+                            'consumption': self._safe_float(row_data.get('consumption')),
+                        }
+                    )
+                    if created:
+                        self.write(self.style.SUCCESS(f"➕ Created Table 2A entry for {report_date} - {row_data.get('state')}"))
+                    else:
+                        self.write(self.style.SUCCESS(f"🔄 Updated Table 2A entry for {report_date} - {row_data.get('state')}"))
                 except Exception as e:
-                    self.write(f"❌ Error saving Table 2A row to DB (State: {row_data.get('state')}): {e}", level='error', style=self.style.ERROR)
-            self.write("✅ Table 2(A) data saved to database.", style=self.style.SUCCESS)
+                    self.write(self.style.ERROR(f"❌ Error saving Table 2A row to DB (State: {row_data.get('state')}): {e}"), level='error')
+            self.write(self.style.SUCCESS(f"✅ Table 2(A) data saved to database."))
         else:
-            self.write("⚠️ Table 2(A) not found or extraction failed.", level='warning', style=self.style.WARNING)
+            self.write(self.style.WARNING("⚠️ Table 2(A) not found or extraction failed."), level='warning')
 
         # Extract Table 2(C)
-        sub_2C = self.extract_subtable_by_markers(all_content_df_cleaned, r"2\s*\(C\)\s*State's\s*Demand\s*Met\s*in\s*MWs.*", r"3\s*\(A\).*", header_row_count=2, debug_table_name="Table 2(C)")
+        sub_2C = self.extract_subtable_by_markers(
+            all_content_df_cleaned,
+            start_marker=r"2\s*\(C\)\s*State's\s*Demand\s*Met\s*in\s*MWs.*",
+            end_marker=r"3\s*\(A\)\s*StateEntities\s*Generation:",
+            header_row_count=2,
+            debug_table_name="Table 2(C)"
+        )
         if sub_2C is not None:
-            column_mapping_2C = { 'State': 'state', 'Maximum Demand Met of the day': 'max_demand', 'Time': 'time_max', 'Shortage during maximum demand': 'shortage_during', 'Requirement at maximum demand': 'req_max_demand', 'Maximum requirement of the day': 'max_req_day', 'Time.1': 'time_max_req', 'Shortage during maximum requirement': 'shortage_max_req', 'Demand Met at maximum Requirement': 'demand_met_max_req', 'Min Demand Met': 'min_demand_met', 'Time.2': 'time_min_demand', 'ACE_MAX': 'ace_max', 'ACE_MIN': 'time_ace_max', 'Time.3': 'ace_min', 'Time.4': 'time_ace_min' }
+            column_mapping_2C = {
+                'State': 'state',
+                'Maximum Demand Met of the day': 'max_demand',
+                'Time': 'time_max',
+                'Shortage during maximum demand': 'shortage_during',
+                'Requirement at maximum demand': 'req_max_demand',
+                'Maximum requirement of the day': 'max_req_day',
+                'Time.1': 'time_max_req',
+                'Shortage during maximum requirement': 'shortage_max_req',
+                'Demand Met at maximum Requirement': 'demand_met_max_req',
+                'Min Demand Met': 'min_demand_met',
+                'Time.2': 'time_min_demand',
+                'ACE_MAX': 'ace_max',
+                'ACE_MIN': 'time_ace_max',
+                'Time.3': 'ace_min',
+                'Time.4': 'time_ace_min'
+            }
+
             sub_2C_renamed = sub_2C.rename(columns=column_mapping_2C)
             sub_2C_filtered = sub_2C_renamed[[col for col in column_mapping_2C.values() if col in sub_2C_renamed.columns]]
+
             combined_json_data['nrldc_table_2C'] = sub_2C_filtered.to_dict(orient='records')
-            self.write("✅ Table 2(C) extracted for combined JSON.", style=self.style.SUCCESS)
-            for _, row_data in sub_2C_filtered.iterrows():
+            self.write(self.style.SUCCESS(f"✅ Table 2(C) extracted for combined JSON."))
+
+            for index, row_data in sub_2C_filtered.iterrows():
                 try:
-                    _, created = Nrldc2CData.objects.update_or_create(report_date=report_date, state=self._safe_string(row_data.get('state')), defaults={ 'max_demand': self._safe_float(row_data.get('max_demand')), 'time_max': self._safe_string(row_data.get('time_max')), 'shortage_during': self._safe_float(row_data.get('shortage_during')), 'req_max_demand': self._safe_float(row_data.get('req_max_demand')), 'max_req_day': self._safe_float(row_data.get('max_req_day')), 'time_max_req': self._safe_string(row_data.get('time_max_req')), 'shortage_max_req': self._safe_float(row_data.get('shortage_max_req')), 'demand_met_max_req': self._safe_float(row_data.get('demand_met_max_req')), 'min_demand_met': self._safe_float(row_data.get('min_demand_met')), 'time_min_demand': self._safe_string(row_data.get('time_min_demand')), 'ace_max': self._safe_float(row_data.get('ace_max')), 'ace_min': self._safe_float(row_data.get('ace_min')), 'time_ace_max': self._safe_string(row_data.get('time_ace_max')), 'time_ace_min': self._safe_string(row_data.get('time_ace_min')) })
+                    obj, created = Nrldc2CData.objects.update_or_create(
+                        report_date=report_date,
+                        state=self._safe_string(row_data.get('state')),
+                        defaults={
+                            'max_demand': self._safe_float(row_data.get('max_demand')),
+                            'time_max': self._safe_string(row_data.get('time_max')),
+                            'shortage_during': self._safe_float(row_data.get('shortage_during')),
+                            'req_max_demand': self._safe_float(row_data.get('req_max_demand')),
+                            'max_req_day': self._safe_float(row_data.get('max_req_day')),
+                            'time_max_req': self._safe_string(row_data.get('time_max_req')),
+                            'shortage_max_req': self._safe_float(row_data.get('shortage_max_req')),
+                            'demand_met_max_req': self._safe_float(row_data.get('demand_met_max_req')),
+                            'min_demand_met': self._safe_float(row_data.get('min_demand_met')),
+                            'time_min_demand': self._safe_string(row_data.get('time_min_demand')),
+                            'ace_max': self._safe_float(row_data.get('ace_max')),
+                            'ace_min': self._safe_float(row_data.get('ace_min')),
+                            'time_ace_max': self._safe_string(row_data.get('time_ace_max')),
+                            'time_ace_min': self._safe_string(row_data.get('time_ace_min')),
+                        }
+                    )
+                    if created:
+                        self.write(self.style.SUCCESS(f"➕ Created Table 2C entry for {report_date} - {row_data.get('state')}"))
+                    else:
+                        self.write(self.style.SUCCESS(f"🔄 Updated Table 2C entry for {report_date} - {row_data.get('state')}"))
                 except Exception as e:
-                    self.write(f"❌ Error saving Table 2C row to DB (State: {self._safe_string(row_data.get('state'))}): {e}", level='error', style=self.style.ERROR)
-            self.write("✅ Table 2(C) data saved to database.", style=self.style.SUCCESS)
+                    self.write(self.style.ERROR(f"❌ Error saving Table 2C row to DB (State: {self._safe_string(row_data.get('state'))}): {e}"), level='error')
+            self.write(self.style.SUCCESS(f"✅ Table 2(C) data saved to database."))
         else:
-            self.write("⚠️ Table 2(C) not found or extraction failed.", level='warning', style=self.style.WARNING)
+            self.write(self.style.WARNING("⚠️ Table 2(C) not found or extraction failed."), level='warning')
 
         if combined_json_data:
-            json_name = f"nrldc_{report_date.strftime('%d%m%Y')}.json"
+            # Save JSON file with current date in 'nrldc_DDMMYYYY.json' format
+            today = datetime.datetime.now()
+            json_name = f"nrldc_{today.strftime('%d%m%Y')}.json"
             json_path = os.path.join(output_dir, json_name)
             with open(json_path, 'w', encoding='utf-8') as f:
                 json.dump(combined_json_data, f, indent=4, ensure_ascii=False)
-            self.write(f"✅ Combined tables saved to: {json_path}", style=self.style.SUCCESS)
+            self.stdout.write(self.style.SUCCESS(f"✅ Combined tables saved to: {json_path}"))
         else:
-            self.write("⚠️ No tables were successfully extracted to create a combined JSON.", level='warning', style=self.style.WARNING)
-
-    def add_arguments(self, parser):
-        parser.add_argument(
-            '--date',
-            type=str,
-            help='Run the script for a specific date in YYYY-MM-DD format.'
-        )
+            self.write(self.style.WARNING("⚠️ No tables were successfully extracted to create a combined JSON file."), level='warning')
 
     def handle(self, *args, **options):
-        script_name = 'nrldc_project'
-        job, _ = AutomationJob.objects.get_or_create(script_name=script_name)
+        today = datetime.date.today()
+        today_str = today.strftime("%Y-%m-%d")
+        project_name = "NRLDC"
 
-        job.status = AutomationJob.Status.RUNNING
-        job.last_run_time = timezone.now()
-        job.log_message = "Starting process..."
-        job.save()
+        if Nrldc2AData.objects.filter(report_date=today).exists() or \
+           Nrldc2CData.objects.filter(report_date=today).exists():
+            self.write(self.style.SUCCESS(f"✅ Pass: Report data for {today_str} already exists in the database. Skipping download and extraction."))
+            return
 
+        url = f"https://nrldc.in/get-documents-list/111?start_date={today_str}&end_date={today_str}"
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+            "Referer": "https://nrldc.in/reports/daily-psp",
+        }
+
+        self.write(f"🌐 Fetching NRDC report metadata for {today_str}...")
         try:
-            run_date_str = options.get('date')
-            if run_date_str:
-                target_date = datetime.datetime.strptime(run_date_str, '%Y-%m-%d').date()
-            else:
-                target_date = datetime.date.today()
-            
-            target_date_str = target_date.strftime("%Y-%m-%d")
-            project_name = "NRLDC"
-            
-            self.write(f"Starting NRLDC process for date: {target_date_str}", style=self.style.NOTICE)
-
-            if Nrldc2AData.objects.filter(report_date=target_date).exists() or \
-               Nrldc2CData.objects.filter(report_date=target_date).exists():
-                message = f"✅ Pass: Data for {target_date_str} already exists. Skipping."
-                self.write(message, style=self.style.SUCCESS)
-                job.status = AutomationJob.Status.SUCCESS
-                job.is_data_available_today = (target_date == datetime.date.today())
-                job.log_message = f"Data for {target_date_str} already exists."
-                job.save()
-                return
-
-            url = f"https://nrldc.in/get-documents-list/111?start_date={target_date_str}&end_date={target_date_str}"
-            headers = { "User-Agent": "Mozilla/5.0", "Accept": "application/json", "X-Requested-With": "XMLHttpRequest", "Referer": "https://nrldc.in/reports/daily-psp" }
-
-            self.write(f"🌐 Fetching NRDC report metadata for {target_date_str}...")
             response = requests.get(url, headers=headers)
             response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            raise CommandError(f"❌ Error fetching NRDC metadata: {e}")
+
+        try:
             data = response.json()
+        except Exception as e:
+            raise CommandError(f"❌ Failed to parse JSON response: {e}")
 
-            if data.get("recordsFiltered", 0) == 0:
-                message = f"⚠️ No report available for {target_date_str}."
-                self.write(message, level='warning', style=self.style.WARNING)
-                raise CommandError(message)
+        if data.get("recordsFiltered", 0) == 0:
+            self.write(self.style.WARNING(f"⚠️ No report available for today ({today_str}). This might be due to weekends, holidays, or late publishing."), level='warning')
+            return
 
-            file_info = data["data"][0]
-            download_url = f"https://nrldc.in/download-file?any=Reports%2FDaily%2FDaily%20PSP%20Report%2F{file_info['file_name']}"
-            
-            output_dir = os.path.join("downloads", project_name, f"report_{target_date.strftime('%Y%m%d')}")
-            os.makedirs(output_dir, exist_ok=True)
+        file_info = data["data"][0]
+        file_name = file_info["file_name"]
+        title = file_info["title"]
 
-            pdf_path = os.path.join(output_dir, f"{file_info['title']}.pdf")
-            self.write(f"⬇️ Attempting to download PDF to: {pdf_path}")
-            
+        download_url = f"https://nrldc.in/download-file?any=Reports%2FDaily%2FDaily%20PSP%20Report%2F{file_name}"
+
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        output_dir = os.path.join("downloads", project_name, f"report_{timestamp}")
+        os.makedirs(output_dir, exist_ok=True)
+        self.write(f"📁 Created output directory: {output_dir}")
+
+        pdf_path = os.path.join(output_dir, f"{title}.pdf")
+        self.write(f"⬇️ Attempting to download PDF to: {pdf_path}")
+
+        try:
             pdf_response = requests.get(download_url, headers=headers)
             pdf_response.raise_for_status()
             with open(pdf_path, "wb") as f:
                 f.write(pdf_response.content)
-            self.write(f"✅ Downloaded report to: {pdf_path}", style=self.style.SUCCESS)
-
-            self.extract_tables_from_pdf(pdf_path, output_dir, target_date)
-
-            job.status = AutomationJob.Status.SUCCESS
-            job.last_success_time = timezone.now()
-            job.is_data_available_today = (target_date == datetime.date.today())
-            job.log_message = f"Process completed successfully at {job.last_success_time.strftime('%Y-%m-%d %H:%M:%S')}."
-            self.write('Successfully completed the process.', style=self.style.SUCCESS)
-
+            self.write(self.style.SUCCESS(f"✅ Downloaded report to: {pdf_path}"))
         except Exception as e:
-            error_message = traceback.format_exc()
-            job.status = AutomationJob.Status.FAILED
-            job.log_message = str(e)
-            self.write(f'An error occurred: {e}', level='error', style=self.style.ERROR)
-            self.logger.error(f"Full traceback:\n{error_message}")
-            
-        finally:
-            job.save()
+            raise CommandError(f"❌ Failed to download PDF: {e}")
+
+        self.extract_tables_from_pdf(pdf_path, output_dir, today)

@@ -158,3 +158,114 @@
 2025-10-03 14:28:05,284 - INFO - Successfully completed the process.
 2025-10-03 14:30:40,222 - INFO - Starting NRLDC process for date: 2025-10-03
 2025-10-03 14:30:40,223 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.
+2025-10-03 15:28:04,288 - INFO - Starting NRLDC process for date: 2025-10-03
+2025-10-03 15:28:04,289 - INFO - ✅ Pass: Data for 2025-10-03 already exists. Skipping.
+2025-10-04 09:20:18,114 - INFO - Starting NRLDC process for date: 2025-10-04
+2025-10-04 09:20:18,119 - INFO - 🌐 Fetching NRDC report metadata for 2025-10-04...
+2025-10-04 09:20:19,455 - INFO - ⬇️ Attempting to download PDF to: downloads\NRLDC\report_20251004\daily031025.pdf
+2025-10-04 09:20:20,488 - INFO - ✅ Downloaded report to: downloads\NRLDC\report_20251004\daily031025.pdf
+2025-10-04 09:20:20,488 - INFO - 🔍 Extracting tables from PDF...
+2025-10-04 09:20:24,068 - INFO - ✅ Found 18 tables.
+2025-10-04 09:20:24,092 - INFO - ✅ Table 2(A) extracted for combined JSON.
+2025-10-04 09:20:24,121 - INFO - ✅ Table 2(A) data saved to database.
+2025-10-04 09:20:24,153 - INFO - ✅ Table 2(C) extracted for combined JSON.
+2025-10-04 09:20:24,191 - INFO - ✅ Table 2(C) data saved to database.
+2025-10-04 09:20:24,191 - INFO - ✅ Combined tables saved to: downloads\NRLDC\report_20251004\nrldc_04102025.json
+2025-10-04 09:20:24,191 - INFO - Successfully completed the process.
+2025-10-04 09:25:19,983 - INFO - Starting NRLDC process for date: 2025-10-04
+2025-10-04 09:25:19,984 - INFO - ✅ Pass: Data for 2025-10-04 already exists. Skipping.
+2025-10-04 09:28:07,183 - INFO - Starting NRLDC process for date: 2025-10-04
+2025-10-04 09:28:07,183 - INFO - ✅ Pass: Data for 2025-10-04 already exists. Skipping.
+2025-10-04 09:29:54,894 - INFO - Target Date: 2025-10-04
+2025-10-04 09:29:54,894 - INFO - Verifying database for existing records...
+2025-10-04 09:29:54,896 - INFO - ✅ No existing data found. Proceeding.
+2025-10-04 09:29:54,896 - INFO - 🌐 Fetching report metadata from NRLDC...
+2025-10-04 09:29:57,507 - INFO - ✅ Downloaded report to: downloads\NRLDC\report_2025-10-04_03-59-56\daily041025.pdf
+2025-10-04 09:29:57,508 - INFO - 🔍 Reading tables from PDF...
+2025-10-04 09:30:00,571 - INFO - ✅ Found 18 tables.
+2025-10-04 09:30:00,580 - INFO - Extracting Table 2(A)...
+2025-10-04 09:30:00,606 - ERROR - An error occurred: Length mismatch: Expected axis has 16 elements, new values have 14 elements
+2025-10-04 09:30:00,606 - ERROR - Full traceback:
+Traceback (most recent call last):
+  File "C:\Users\tamilarasans\Desktop\REPORT\dlc_reports\nrldc_app\management\commands\nrldc_project.py", line 226, in handle
+    self.extract_tables_from_pdf(pdf_path, output_dir, target_date)
+  File "C:\Users\tamilarasans\Desktop\REPORT\dlc_reports\nrldc_app\management\commands\nrldc_project.py", line 129, in extract_tables_from_pdf
+    sub_2A = self.extract_subtable_by_markers(all_content_df, r".*2\s*\(A\).*", r"2\s*\(B\).*", header_row_count=2, debug_table_name="Table 2(A)")
+  File "C:\Users\tamilarasans\Desktop\REPORT\dlc_reports\nrldc_app\management\commands\nrldc_project.py", line 97, in extract_subtable_by_markers
+    sub_df_data.columns = new_columns
+  File "C:\Program Files\Python310\lib\site-packages\pandas\core\generic.py", line 6218, in __setattr__
+    return object.__setattr__(self, name, value)
+  File "properties.pyx", line 69, in pandas._libs.properties.AxisProperty.__set__
+  File "C:\Program Files\Python310\lib\site-packages\pandas\core\generic.py", line 767, in _set_axis
+    self._mgr.set_axis(axis, labels)
+  File "C:\Program Files\Python310\lib\site-packages\pandas\core\internals\managers.py", line 227, in set_axis
+    self._validate_set_axis(axis, new_labels)
+  File "C:\Program Files\Python310\lib\site-packages\pandas\core\internals\base.py", line 85, in _validate_set_axis
+    raise ValueError(
+ValueError: Length mismatch: Expected axis has 16 elements, new values have 14 elements
+
+2025-10-04 09:30:25,351 - INFO - 🌐 Fetching NRDC report metadata for 2025-10-04...
+2025-10-04 09:30:26,729 - INFO - 📁 Created output directory: downloads\NRLDC\report_2025-10-04_09-30-26
+2025-10-04 09:30:26,729 - INFO - ⬇️ Attempting to download PDF to: downloads\NRLDC\report_2025-10-04_09-30-26\daily031025.pdf
+2025-10-04 09:30:27,743 - INFO - [32;1m✅ Downloaded report to: downloads\NRLDC\report_2025-10-04_09-30-26\daily031025.pdf[0m
+2025-10-04 09:30:27,744 - INFO - 🔍 Extracting tables from PDF...
+2025-10-04 09:30:30,945 - INFO - [32;1m✅ Found 18 tables.[0m
+2025-10-04 09:30:31,008 - INFO - [32;1m✅ Table 2(A) extracted for combined JSON.[0m
+2025-10-04 09:30:31,011 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - PUNJAB[0m
+2025-10-04 09:30:31,011 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - HARYANA[0m
+2025-10-04 09:30:31,024 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - RAJASTHAN[0m
+2025-10-04 09:30:31,030 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - DELHI[0m
+2025-10-04 09:30:31,032 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - UTTAR PRADESH[0m
+2025-10-04 09:30:31,038 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - UTTARAKHAND[0m
+2025-10-04 09:30:31,043 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - HIMACHALPRADESH[0m
+2025-10-04 09:30:31,048 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - J&K(UT) &Ladakh(UT)[0m
+2025-10-04 09:30:31,053 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - CHANDIGARH[0m
+2025-10-04 09:30:31,058 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - RAILWAYS_NR ISTS[0m
+2025-10-04 09:30:31,065 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - Region[0m
+2025-10-04 09:30:31,065 - INFO - [32;1m✅ Table 2(A) data saved to database.[0m
+2025-10-04 09:30:31,094 - INFO - [32;1m✅ Table 2(C) extracted for combined JSON.[0m
+2025-10-04 09:30:31,102 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - PUNJAB[0m
+2025-10-04 09:30:31,106 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - HARYANA[0m
+2025-10-04 09:30:31,113 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - RAJASTHAN[0m
+2025-10-04 09:30:31,119 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - DELHI[0m
+2025-10-04 09:30:31,124 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - UP[0m
+2025-10-04 09:30:31,131 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - UTTARAKHA..[0m
+2025-10-04 09:30:31,137 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - HP[0m
+2025-10-04 09:30:31,141 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - J&K(UT)&Lad..[0m
+2025-10-04 09:30:31,147 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - CHANDIGARH[0m
+2025-10-04 09:30:31,152 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - RAILWAYS_NRISTS[0m
+2025-10-04 09:30:31,156 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - NR[0m
+2025-10-04 09:30:31,156 - INFO - [32;1m✅ Table 2(C) data saved to database.[0m
+2025-10-04 09:30:47,521 - INFO - [32;1m✅ Pass: Report data for 2025-10-04 already exists in the database. Skipping download and extraction.[0m
+2025-10-04 09:31:18,842 - INFO - 🌐 Fetching NRDC report metadata for 2025-10-04...
+2025-10-04 09:31:20,108 - INFO - 📁 Created output directory: downloads\NRLDC\report_2025-10-04_09-31-20
+2025-10-04 09:31:20,108 - INFO - ⬇️ Attempting to download PDF to: downloads\NRLDC\report_2025-10-04_09-31-20\daily031025.pdf
+2025-10-04 09:31:21,157 - INFO - [32;1m✅ Downloaded report to: downloads\NRLDC\report_2025-10-04_09-31-20\daily031025.pdf[0m
+2025-10-04 09:31:21,158 - INFO - 🔍 Extracting tables from PDF...
+2025-10-04 09:31:24,324 - INFO - [32;1m✅ Found 18 tables.[0m
+2025-10-04 09:31:24,358 - INFO - [32;1m✅ Table 2(A) extracted for combined JSON.[0m
+2025-10-04 09:31:24,368 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - PUNJAB[0m
+2025-10-04 09:31:24,372 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - HARYANA[0m
+2025-10-04 09:31:24,376 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - RAJASTHAN[0m
+2025-10-04 09:31:24,383 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - DELHI[0m
+2025-10-04 09:31:24,386 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - UTTAR PRADESH[0m
+2025-10-04 09:31:24,388 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - UTTARAKHAND[0m
+2025-10-04 09:31:24,396 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - HIMACHALPRADESH[0m
+2025-10-04 09:31:24,401 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - J&K(UT) &Ladakh(UT)[0m
+2025-10-04 09:31:24,406 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - CHANDIGARH[0m
+2025-10-04 09:31:24,411 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - RAILWAYS_NR ISTS[0m
+2025-10-04 09:31:24,415 - INFO - [32;1m➕ Created Table 2A entry for 2025-10-04 - Region[0m
+2025-10-04 09:31:24,415 - INFO - [32;1m✅ Table 2(A) data saved to database.[0m
+2025-10-04 09:31:24,436 - INFO - [32;1m✅ Table 2(C) extracted for combined JSON.[0m
+2025-10-04 09:31:24,440 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - PUNJAB[0m
+2025-10-04 09:31:24,447 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - HARYANA[0m
+2025-10-04 09:31:24,453 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - RAJASTHAN[0m
+2025-10-04 09:31:24,456 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - DELHI[0m
+2025-10-04 09:31:24,460 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - UP[0m
+2025-10-04 09:31:24,467 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - UTTARAKHA..[0m
+2025-10-04 09:31:24,471 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - HP[0m
+2025-10-04 09:31:24,475 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - J&K(UT)&Lad..[0m
+2025-10-04 09:31:24,482 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - CHANDIGARH[0m
+2025-10-04 09:31:24,486 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - RAILWAYS_NRISTS[0m
+2025-10-04 09:31:24,489 - INFO - [32;1m➕ Created Table 2C entry for 2025-10-04 - NR[0m
+2025-10-04 09:31:24,490 - INFO - [32;1m✅ Table 2(C) data saved to database.[0m
